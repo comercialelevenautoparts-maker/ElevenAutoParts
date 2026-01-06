@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Gift, Package, Heart, LogOut, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { User, Package, Heart, LogOut, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,9 +44,8 @@ const Profile = () => {
 
   const menuItems = [
     { icon: User, label: 'Informações pessoais', href: '/perfil', active: true },
-    { icon: Gift, label: 'Indique e ganhe', href: '#' },
     { icon: Package, label: 'Meus pedidos', href: '/pedidos' },
-    { icon: Heart, label: 'Minha lista de desejos', href: '#' },
+    { icon: Heart, label: 'Minha lista de desejos', href: '/favoritos' },
   ];
 
   const handleSave = async () => {

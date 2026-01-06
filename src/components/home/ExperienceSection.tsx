@@ -36,7 +36,7 @@ const features = [
 
 const ExperienceSection = () => {
   return (
-    <section className="py-16 bg-muted">
+    <section className="py-16 bg-muted mt-24">
       <div className="container mx-auto px-4">
         {/* Header with image */}
         <div className="flex flex-col lg:flex-row items-center gap-8 mb-12">

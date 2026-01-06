@@ -23,7 +23,7 @@ const Orders = () => {
     { icon: User, label: 'Informações pessoais', href: '/perfil' },
     { icon: Gift, label: 'Indique e ganhe', href: '#' },
     { icon: Package, label: 'Meus pedidos', href: '/pedidos', active: true },
-    { icon: Heart, label: 'Minha lista de desejos', href: '#' },
+    { icon: Heart, label: 'Minha lista de desejos', href: '/favoritos' },
   ];
 
   const tabs = [

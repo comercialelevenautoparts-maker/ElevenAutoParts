@@ -89,7 +89,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="container mx-auto px-4 py-8 md:py-16">
+    <section className="container mx-auto px-4 py-8 md:py-16 mt-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left Content */}
         <div className="space-y-6">
@@ -389,20 +389,20 @@ const HeroSection = () => {
             <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
               <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Check className="w-4 h-4 text-primary" />
-                Palhetas Compatíveis
+                Palhetas compatíveis
               </h4>
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-4 gap-3 text-sm mt-4 mb-8">
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Motorista</span>
-                  <span className="font-medium text-foreground">{compatibilidade.tamanho_motorista}" ({Number(compatibilidade.tamanho_motorista) * 25.4}mm)</span>
+                  <span className="text-foreground font-bold">Motorista</span>
+                  <span className="font-medium text-muted-foreground">{compatibilidade.tamanho_motorista}" ({Number(compatibilidade.tamanho_motorista) * 25.4}mm)</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">Passageiro</span>
-                  <span className="font-medium text-foreground">{compatibilidade.tamanho_passageiro}" ({Number(compatibilidade.tamanho_passageiro) * 25.4}mm)</span>
+                  <span className="text-foreground font-bold">Passageiro</span>
+                  <span className="font-medium text-muted-foreground">{compatibilidade.tamanho_passageiro}" ({Number(compatibilidade.tamanho_passageiro) * 25.4}mm)</span>
                 </div>
                 <div className="flex flex-col col-span-2">
-                  <span className="text-muted-foreground">Conector</span>
-                  <span className="font-medium text-foreground">{compatibilidade.conector}</span>
+                  <span className="text-foreground font-bold">Conector</span>
+                  <span className="font-medium text-muted-foreground">{compatibilidade.conector}</span>
                 </div>
               </div>
               <button className="mt-3 w-full btn-primary text-sm py-2">

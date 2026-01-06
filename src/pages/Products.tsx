@@ -40,7 +40,7 @@ const Products = () => {
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
               <div className="lg:w-1/2">
                 <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+                  <h1 className="text-4xl md:text-5xl font-medium text-[#D4AF37]">
                     EXPLORE NOSSOS PRODUTOS
                   </h1>
                   <span className="section-subtitle">PRODUTOS</span>
@@ -134,13 +134,13 @@ const Products = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-16">
         {/* Hero Section */}
         <div className="mb-12">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
             <div className="lg:w-1/2">
               <div className="flex items-center gap-2 mb-2">
-                <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+                <h1 className="text-2xl md:text-4xl font- text-[#D4AF37]">
                   EXPLORE NOSSOS PRODUTOS
                 </h1>
                 <span className="section-subtitle">PRODUTOS</span>

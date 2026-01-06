@@ -12,6 +12,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
+import Favorites from "./pages/Favorites";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/pedidos" element={<Orders />} />
             <Route path="/perfil" element={<Profile />} />
+            <Route path="/favoritos" element={<Favorites />} />
             <Route path="/suporte" element={<Support />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

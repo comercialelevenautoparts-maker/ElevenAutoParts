@@ -65,12 +65,12 @@ const FAQSection = () => {
   const [activeCategory, setActiveCategory] = useState('TODOS');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const filteredFAQ = activeCategory === 'TODOS' 
-    ? faqItems 
+  const filteredFAQ = activeCategory === 'TODOS'
+    ? faqItems
     : faqItems.filter(item => item.category === activeCategory);
 
   return (
-    <section className="container mx-auto px-4 py-16">
+    <section className="container mx-auto px-4 py-16 mt-24">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <h2 className="section-title">TEM PERGUNTAS? NÓS TEMOS AS RESPOSTAS.</h2>
@@ -87,11 +87,10 @@ const FAQSection = () => {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeCategory === cat 
-                ? 'text-foreground border-b-2 border-primary' 
+            className={`px-4 py-2 text-sm font-medium transition-colors ${activeCategory === cat
+                ? 'text-foreground border-b-2 border-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
           >
             {cat}
           </button>
@@ -101,7 +100,7 @@ const FAQSection = () => {
       {/* FAQ Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredFAQ.map((item, index) => (
-          <div 
+          <div
             key={index}
             className="border border-border rounded-lg overflow-hidden"
           >

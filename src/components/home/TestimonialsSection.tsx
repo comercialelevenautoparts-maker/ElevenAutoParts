@@ -26,7 +26,7 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section className="container mx-auto px-4 py-16">
+    <section className="container mx-auto px-4 py-16 mt-24">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
           <div className="flex items-center gap-2 mb-2">

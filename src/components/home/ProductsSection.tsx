@@ -66,7 +66,7 @@ const ProductsSection = () => {
   }
 
   return (
-    <section className="container mx-auto px-4 py-12">
+    <section className="container mx-auto px-4 py-12 mt-24">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -89,9 +89,8 @@ const ProductsSection = () => {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActiveCategory('todos')}
-            className={`category-tab ${
-              activeCategory === 'todos' ? 'category-tab-active' : 'category-tab-inactive'
-            }`}
+            className={`category-tab ${activeCategory === 'todos' ? 'category-tab-active' : 'category-tab-inactive'
+              }`}
           >
             Todos
           </button>
@@ -99,9 +98,8 @@ const ProductsSection = () => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`category-tab ${
-                activeCategory === cat.id ? 'category-tab-active' : 'category-tab-inactive'
-              }`}
+              className={`category-tab ${activeCategory === cat.id ? 'category-tab-active' : 'category-tab-inactive'
+                }`}
             >
               {cat.nome}
             </button>

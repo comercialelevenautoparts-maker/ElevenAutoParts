@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Linkedin } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFacebook, faInstagram, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import logoImage from '@/assets/logo-eleven.png';
 
 const Footer = () => {
@@ -7,20 +8,19 @@ const Footer = () => {
     inicio: [
       { label: 'Destaques', href: '#' },
       { label: 'Promoções', href: '#' },
-      { label: 'Depoimentos', href: '#' },
+      { label: 'Novos Produtos', href: '#' },
       { label: 'FAQ', href: '#' },
     ],
-    pecas: [
-      { label: 'Carros', href: '#' },
-      { label: 'Motos', href: '#' },
-      { label: 'Caminhonetes', href: '#' },
-      { label: 'Clássicos', href: '#' },
+    minha_conta: [
+      { label: 'Meu Perfil', href: '#' },
+      { label: 'Meus Pedidos', href: '#' },
+      { label: 'Carrinho', href: '#' },
+      { label: 'Favoritos', href: '#' },
     ],
-    categorias: [
-      { label: 'Motor', href: '#' },
-      { label: 'Suspensão', href: '#' },
-      { label: 'Freios', href: '#' },
-      { label: 'Elétrica', href: '#' },
+    produtos: [
+      { label: 'Kit de Palhetas', href: '#' },
+      { label: 'Acessórios', href: '#' },
+      { label: 'Todos os Produtos', href: '#' },
     ],
     suporte: [
       { label: 'Rastreamento', href: '#' },
@@ -30,11 +30,11 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-white border-t border-border">
+    <footer className="bg-white border-t border-border mt-24">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Logo and Newsletter */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 pr-10">
             <Link to="/">
               <img src={logoImage} alt="Eleven Auto Parts" className="h-16 mb-6" />
             </Link>
@@ -65,9 +65,9 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Peças por Veículo</h4>
+            <h4 className="font-semibold mb-4">Minha Conta</h4>
             <ul className="space-y-2">
-              {footerLinks.pecas.map((link) => (
+              {footerLinks.minha_conta.map((link) => (
                 <li key={link.label}>
                   <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
                     {link.label}
@@ -78,9 +78,9 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Categorias</h4>
+            <h4 className="font-semibold mb-4">Produtos</h4>
             <ul className="space-y-2">
-              {footerLinks.categorias.map((link) => (
+              {footerLinks.produtos.map((link) => (
                 <li key={link.label}>
                   <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
                     {link.label}
@@ -114,13 +114,13 @@ const Footer = () => {
 
           <div className="flex items-center gap-3">
             <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90">
-              <Facebook className="w-4 h-4 fill-current" />
+              <FontAwesomeIcon icon={faFacebook} className="w-4 h-4" />
             </a>
             <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90">
-              <Twitter className="w-4 h-4 fill-current" />
+              <FontAwesomeIcon icon={faInstagram} className="w-4 h-4" />
             </a>
             <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90">
-              <Linkedin className="w-4 h-4 fill-current" />
+              <FontAwesomeIcon icon={faLinkedin} className="w-4 h-4" />
             </a>
           </div>
 

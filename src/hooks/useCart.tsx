@@ -7,11 +7,13 @@ export interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  size?: string;
 }
 
 interface CartStore {
   items: CartItem[];
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addToCart: (item: Omit<CartItem, 'quantity'>, quantity: number) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -27,7 +29,7 @@ export const useCart = create<CartStore>()(
       addItem: (item) => {
         const { items } = get();
         const existingItem = items.find((i) => i.id === item.id);
-        
+
         if (existingItem) {
           set({
             items: items.map((i) =>
@@ -36,6 +38,24 @@ export const useCart = create<CartStore>()(
           });
         } else {
           set({ items: [...items, { ...item, quantity: 1 }] });
+        }
+      },
+
+      addToCart: (item, quantity) => {
+        const { items } = get();
+        // Check if item with same id and size already exists
+        const existingItem = items.find((i) => i.id === item.id && i.size === item.size);
+
+        if (existingItem) {
+          set({
+            items: items.map((i) =>
+              i.id === item.id && i.size === item.size
+                ? { ...i, quantity: i.quantity + quantity }
+                : i
+            ),
+          });
+        } else {
+          set({ items: [...items, { ...item, quantity }] });
         }
       },
       
