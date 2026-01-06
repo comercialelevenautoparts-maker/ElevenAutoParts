@@ -1,37 +1,61 @@
-# Welcome to Your Lovable Project
+# Eleven Auto Parts - Frontend
 
-Bem-vindo ao seu projeto criado com [Lovable](https://lovable.dev)!
+## Descrição
+Este é o frontend da aplicação Eleven Auto Parts, uma loja online especializada em peças automotivas. O projeto foi desenvolvido com React.js, TypeScript e Vite, seguindo as melhores práticas de desenvolvimento web moderno.
 
-## Informações do Projeto
+## Tecnologias Utilizadas
+- React.js
+- TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
+- Supabase (integração)
+- Stripe (integração)
 
-**URL do projeto**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Instalação
 
-## Como editar este código?
-
-Existem várias formas de trabalhar no seu projeto:
-
-### 1. Usar a interface do Lovable (recomendado para rapidez)
-
-- Acesse: [https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID)
-- Comece a descrever as mudanças que deseja (prompting)
-- As alterações são **commitadas automaticamente** no repositório
-
-### 2. Editar localmente com seu editor preferido
-
-Requisitos:
-- Node.js e npm instalados [](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Passo a passo:
-
+1. Clone o repositório
+2. Instale as dependências:
 ```bash
-# 1. Clone o repositório (substitua pela URL real do seu repo)
-git clone <SEU_GIT_URL>
-
-# 2. Entre na pasta do projeto
-cd <NOME_DA_PASTA_DO_PROJETO>
-
-# 3. Instale as dependências
 npm install
+```
 
-# 4. Inicie o servidor de desenvolvimento (com hot-reload)
+3. Configure as variáveis de ambiente:
+```env
+VITE_SUPABASE_URL=seu_url_do_supabase
+VITE_SUPABASE_PUBLISHABLE_KEY=sua_chave_publica_do_supabase
+```
+
+4. Inicie o servidor de desenvolvimento:
+```bash
 npm run dev
+```
+
+## Scripts Disponíveis
+- `npm run dev` - Inicia o servidor de desenvolvimento
+- `npm run build` - Cria uma build de produção
+- `npm run preview` - Inicia um servidor de preview local para a build de produção
+
+## Estrutura de Pastas
+- `src/` - Código-fonte da aplicação
+- `src/components/` - Componentes reutilizáveis
+- `src/pages/` - Páginas da aplicação
+- `src/hooks/` - Hooks personalizados
+- `src/contexts/` - Contextos do React
+- `src/integrations/` - Integrações com serviços externos
+- `src/assets/` - Arquivos estáticos (imagens, ícones, etc.)
+
+## Funcionalidades
+- Catálogo de produtos com filtros e busca
+- Sistema de carrinho de compras
+- Autenticação de usuários
+- Dashboard de pedidos
+- Páginas de checkout
+- Integração com Supabase para autenticação e banco de dados
+- Integração com Stripe para pagamentos
+
+## Componentes UI
+O projeto utiliza componentes da biblioteca shadcn/ui com estilos personalizados para manter a consistência visual da marca.
+
+## Contribuição
+Sinta-se à vontade para abrir issues e pull requests para melhorar o projeto.
