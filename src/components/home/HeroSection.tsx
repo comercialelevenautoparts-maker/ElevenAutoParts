@@ -1,0 +1,419 @@
+import { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, ChevronDown, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useMarcas, useModelos, useAnos, useCompatibilidade } from '@/hooks/useVehicles';
+import productShowcase from '@/assets/product-showcase.png';
+
+interface ProductVariant {
+  id: string;
+  name: string;
+}
+
+const productVariants: ProductVariant[] = [
+  {
+    id: '1',
+    name: 'Palheta Limpa Para-Brisa universal',
+  },
+  {
+    id: '2',
+    name: 'Conector Premium Universal',
+  },
+];
+
+const HeroSection = () => {
+  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Vehicle filter states
+  const [selectedMarca, setSelectedMarca] = useState<string>('');
+  const [selectedModelo, setSelectedModelo] = useState<string>('');
+  const [selectedAno, setSelectedAno] = useState<number | null>(null);
+
+  // Dropdown open states
+  const [isMarcaOpen, setIsMarcaOpen] = useState(false);
+  const [isModeloOpen, setIsModeloOpen] = useState(false);
+  const [isAnoOpen, setIsAnoOpen] = useState(false);
+
+  const currentProduct = productVariants[currentIndex];
+
+  // Fetch data from hooks
+  const { data: marcas = [], isLoading: marcasLoading, error: marcasError } = useMarcas();
+  const { data: modelos = [], isLoading: modelosLoading, error: modelosError } = useModelos(selectedMarca);
+  const { data: anos = [], isLoading: anosLoading, error: anosError } = useAnos(selectedMarca, selectedModelo);
+  const { data: compatibilidade, isLoading: compatibilidadeLoading, error: compatibilidadeError } = useCompatibilidade(
+    selectedMarca,
+    selectedModelo,
+    selectedAno || 0
+  );
+
+  const next = () => {
+    setCurrentIndex((prev) => (prev + 1) % productVariants.length);
+  };
+
+  const prev = () => {
+    setCurrentIndex((prev) => (prev - 1 + productVariants.length) % productVariants.length);
+  };
+
+  const selectProduct = (index: number) => {
+    setCurrentIndex(index);
+    setIsDropdownOpen(false);
+  };
+
+  const handleMarcaSelect = (marca: string) => {
+    setSelectedMarca(marca);
+    setSelectedModelo('');
+    setSelectedAno(null);
+    setIsMarcaOpen(false);
+  };
+
+  const handleModeloSelect = (modelo: string) => {
+    setSelectedModelo(modelo);
+    setSelectedAno(null);
+    setIsModeloOpen(false);
+  };
+
+  const handleAnoSelect = (ano: number) => {
+    setSelectedAno(ano);
+    setIsAnoOpen(false);
+  };
+
+  const closeAllDropdowns = () => {
+    setIsMarcaOpen(false);
+    setIsModeloOpen(false);
+    setIsAnoOpen(false);
+  };
+
+  const handleBuyNow = () => {
+    navigate('/produtos');
+  };
+
+  return (
+    <section className="container mx-auto px-4 py-8 md:py-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Left Content */}
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+              ELEVE SEU CARRO COM <span className="text-primary"><br />ELEVEN AUTO PARTS</span>
+            </h1>
+            <p className="mt-4 text-muted-foreground max-w-lg">
+              Explore o mundo das peças automotivas na AutoParts, onde qualidade encontra preço justo. Descubra as melhores palhetas para limpeza, acessórios e peças de reposição com promoções exclusivas para manter seu veículo em perfeito estado.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="btn-primary flex items-center gap-2"
+              onClick={handleBuyNow}
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Comprar agora
+            </button>
+            <button className="nav-link">
+              Fale conosco
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-6 pt-6 border-t border-border">
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">MAIS DE 1000</div>
+              <p className="text-sm text-muted-foreground">Clientes que já foram atendidos</p>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">99%</div>
+              <p className="text-sm text-muted-foreground">Taxa de Satisfação do Cliente</p>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">24/7</div>
+              <p className="text-sm text-muted-foreground">Conveniência nas compras</p>
+            </div>
+            <div>
+              <div className="text-2xl md:text-3xl font-bold text-foreground">30 DIAS</div>
+              <p className="text-sm text-muted-foreground">Devolução sem complicações</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right - Product Showcase */}
+        <div className="bg-muted rounded-2xl p-6 relative">
+          {/* Header with dropdown and navigation */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 text-foreground font-medium hover:text-primary transition-colors"
+              >
+                {currentProduct.name}
+                <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown */}
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-elevated z-50 py-2">
+                  {productVariants.map((variant, index) => (
+                    <button
+                      key={variant.id}
+                      onClick={() => selectProduct(index)}
+                      className={`w-full px-4 py-2 text-left hover:bg-muted transition-colors ${index === currentIndex ? 'text-primary font-medium' : 'text-foreground'
+                        }`}
+                    >
+                      {variant.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={prev}
+                className="icon-button icon-button-outline bg-background"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={next}
+                className="icon-button icon-button-primary"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Product Image - Full showcase image */}
+          <div className="relative">
+            {/* <img
+              src={productShowcase}
+              alt={currentProduct.name}
+              className="w-full h-auto object-contain"
+            /> */}
+          </div>
+
+          {/* Vehicle Filter Options */}
+          <div className="flex flex-wrap items-start justify-between gap-4 pt-4 border-t border-border mt-4">
+            {/* Debug information */}
+            {marcasError && (
+              <div className="col-span-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <p>Erro ao carregar marcas: {marcasError.message}</p>
+              </div>
+            )}
+            {modelosError && (
+              <div className="col-span-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <p>Erro ao carregar modelos: {modelosError.message}</p>
+              </div>
+            )}
+            {anosError && (
+              <div className="col-span-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <p>Erro ao carregar anos: {anosError.message}</p>
+              </div>
+            )}
+            {compatibilidadeError && (
+              <div className="col-span-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <p>Erro ao carregar compatibilidade: {compatibilidadeError.message}</p>
+              </div>
+            )}
+
+            {/* Marca Dropdown */}
+            <div className="flex flex-col gap-2 min-w-[100px]">
+              <span className="text-sm font-medium text-foreground">Carro</span>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    closeAllDropdowns();
+                    setIsMarcaOpen(!isMarcaOpen);
+                  }}
+                  className="flex items-center justify-between gap-2 w-full px-3 py-2 bg-card text-foreground border border-border rounded-lg text-sm hover:border-foreground transition-colors min-w-[120px]"
+                >
+                  <span className={selectedMarca ? 'text-foreground' : 'text-muted-foreground'}>
+                    {marcasLoading ? 'Carregando...' : (selectedMarca || 'Selecione')}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isMarcaOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isMarcaOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-48 max-h-60 overflow-y-auto bg-card border border-border rounded-lg shadow-elevated z-50 py-1">
+                    {marcasLoading ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Carregando marcas...</div>
+                    ) : marcas.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Nenhuma marca encontrada</div>
+                    ) : (
+                      marcas.map((marca) => (
+                        <button
+                          key={marca}
+                          onClick={() => handleMarcaSelect(marca)}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center justify-between ${marca === selectedMarca ? 'text-primary font-medium bg-muted' : 'text-foreground'
+                            }`}
+                        >
+                          {marca}
+                          {marca === selectedMarca && <Check className="w-4 h-4" />}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {selectedMarca && (
+                <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
+                  Marca selecionada
+                </span>
+              )}
+            </div>
+
+            {/* Modelo Dropdown */}
+            <div className="flex flex-col gap-2 min-w-[100px]">
+              <span className="text-sm font-medium text-foreground">Modelo</span>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (selectedMarca) {
+                      closeAllDropdowns();
+                      setIsModeloOpen(!isModeloOpen);
+                    }
+                  }}
+                  disabled={!selectedMarca || modelosLoading}
+                  className={`flex items-center justify-between gap-2 w-full px-3 py-2 border rounded-lg text-sm min-w-[120px] transition-colors ${selectedMarca
+                    ? 'bg-card text-foreground border-border hover:border-foreground'
+                    : 'bg-muted/50 text-muted-foreground border-border/50 cursor-not-allowed'
+                    }`}
+                >
+                  <span className={selectedModelo ? 'text-foreground' : 'text-muted-foreground'}>
+                    {modelosLoading ? 'Carregando...' : (selectedModelo || 'Selecione')}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isModeloOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isModeloOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-56 max-h-60 overflow-y-auto bg-card border border-border rounded-lg shadow-elevated z-50 py-1">
+                    {modelosLoading ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Carregando modelos...</div>
+                    ) : modelos.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum modelo encontrado</div>
+                    ) : (
+                      modelos.map((modeloObj) => (
+                        <button
+                          key={modeloObj.modelo}
+                          onClick={() => handleModeloSelect(modeloObj.modelo)}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center justify-between ${modeloObj.modelo === selectedModelo ? 'text-primary font-medium bg-muted' : 'text-foreground'
+                            }`}
+                        >
+                          <div className="flex flex-col">
+                            <span>{modeloObj.modelo}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {modeloObj.conector} • {modeloObj.tamanho_motorista}"/{modeloObj.tamanho_passageiro}"
+                            </span>
+                          </div>
+                          {modeloObj.modelo === selectedModelo && <Check className="w-4 h-4" />}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {selectedModelo && (
+                <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">
+                  {(() => {
+                    const m = modelos.find(obj => obj.modelo === selectedModelo);
+                    return m ? `${m.conector} • ${m.tamanho_motorista}"/${m.tamanho_passageiro}"` : 'Modelo selecionado';
+                  })()}
+                </span>
+              )}
+            </div>
+
+            {/* Ano Dropdown */}
+            <div className="flex flex-col gap-2 min-w-[80px]">
+              <span className="text-sm font-medium text-foreground">Ano</span>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    if (selectedModelo) {
+                      closeAllDropdowns();
+                      setIsAnoOpen(!isAnoOpen);
+                    }
+                  }}
+                  disabled={!selectedModelo || anosLoading}
+                  className={`flex items-center justify-between gap-2 w-full px-3 py-2 border rounded-lg text-sm min-w-[100px] transition-colors ${selectedModelo
+                    ? 'bg-card text-foreground border-border hover:border-foreground'
+                    : 'bg-muted/50 text-muted-foreground border-border/50 cursor-not-allowed'
+                    }`}
+                >
+                  <span className={selectedAno ? 'text-foreground' : 'text-muted-foreground'}>
+                    {anosLoading ? 'Carregando...' : (selectedAno || 'Selecione')}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isAnoOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isAnoOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-56 max-h-60 overflow-y-auto bg-card border border-border rounded-lg shadow-elevated z-50 py-1">
+                    {anosLoading ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Carregando anos...</div>
+                    ) : anos.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">Nenhum ano encontrado</div>
+                    ) : (
+                      anos.map((item) => (
+                        <button
+                          key={item.ano}
+                          onClick={() => handleAnoSelect(item.ano)}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center justify-between ${item.ano === selectedAno ? 'text-primary font-medium bg-muted' : 'text-foreground'
+                            }`}
+                        >
+                          <div className="flex flex-col">
+                            <span>{item.ano}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {item.conector} • {item.tamanho_motorista}"/{item.tamanho_passageiro}"
+                            </span>
+                          </div>
+                          {item.ano === selectedAno && <Check className="w-4 h-4" />}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {selectedAno && (
+                <span className="text-[10px] text-muted-foreground truncate max-w-[100px]">
+                  {(() => {
+                    const a = anos.find(obj => obj.ano === selectedAno);
+                    return a ? `${a.conector} • ${a.tamanho_motorista}"/${a.tamanho_passageiro}"` : 'Ano selecionado';
+                  })()}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Compatibility Result */}
+          {compatibilidade && (
+            <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Check className="w-4 h-4 text-primary" />
+                Palhetas Compatíveis
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Motorista</span>
+                  <span className="font-medium text-foreground">{compatibilidade.tamanho_motorista}" ({Number(compatibilidade.tamanho_motorista) * 25.4}mm)</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground">Passageiro</span>
+                  <span className="font-medium text-foreground">{compatibilidade.tamanho_passageiro}" ({Number(compatibilidade.tamanho_passageiro) * 25.4}mm)</span>
+                </div>
+                <div className="flex flex-col col-span-2">
+                  <span className="text-muted-foreground">Conector</span>
+                  <span className="font-medium text-foreground">{compatibilidade.conector}</span>
+                </div>
+              </div>
+              <button className="mt-3 w-full btn-primary text-sm py-2">
+                Ver Produtos Compatíveis
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default HeroSection;
