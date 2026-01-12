@@ -1,9 +1,66 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebook, faInstagram, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import logoImage from '@/assets/logo-eleven.png';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Footer = () => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email) return;
+
+    // Regex simples para validação de e-mail
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        variant: "destructive",
+        title: "E-mail inválido",
+        description: "Por favor, insira um endereço de e-mail válido.",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscriptions')
+        .insert([{ email }]);
+
+      if (error) {
+        if (error.code === '23505') { // Código de erro para violação de unicidade no Postgres
+          toast({
+            title: "Já cadastrado!",
+            description: "Este e-mail já faz parte da nossa newsletter.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Inscrição confirmada!",
+          description: "Obrigado por se inscrever na nossa newsletter!",
+        });
+        setEmail('');
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao se inscrever",
+        description: "Ocorreu um problema Técnico. Tente novamente mais tarde.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const footerLinks = {
     inicio: [
       { label: 'Destaques', href: '#' },
@@ -23,9 +80,10 @@ const Footer = () => {
       { label: 'Todos os Produtos', href: '#' },
     ],
     suporte: [
-      { label: 'Rastreamento', href: '#' },
-      { label: 'Trocas/Devoluções', href: '#' },
-      { label: 'Contato', href: '#' },
+      { label: 'Rastreamento', href: '/rastreio' },
+      { label: 'Trocas/Devoluções', href: '/return-policy' },
+      { label: 'Cancelamento', href: '/cancellation-policy' },
+      { label: 'Contato', href: '/suporte' },
     ],
   };
 
@@ -38,16 +96,28 @@ const Footer = () => {
             <Link to="/">
               <img src={logoImage} alt="Eleven Auto Parts" className="h-16 mb-6" />
             </Link>
-            <div className="flex gap-2">
+            <form onSubmit={handleNewsletter} className="flex gap-2">
               <input
                 type="email"
                 placeholder="Insira seu e-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                 className="input-field flex-1 bg-background"
+                required
               />
-              <button className="btn-primary whitespace-nowrap">
-                Inscreva-se
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary whitespace-nowrap min-w-[120px] flex justify-center items-center"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  'Inscreva-se'
+                )}
               </button>
-            </div>
+            </form>
           </div>
 
           {/* Links */}
@@ -56,9 +126,13 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.inicio.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link
+                    to={link.href}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -69,9 +143,13 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.minha_conta.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link
+                    to={link.href}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -82,9 +160,13 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.produtos.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link
+                    to={link.href}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -95,9 +177,13 @@ const Footer = () => {
             <ul className="space-y-2">
               {footerLinks.suporte.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Link
+                    to={link.href}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -106,10 +192,14 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground">Termos & Condições</a>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <Link to="/terms$conditions" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Termos &amp; Condições</Link>
             <span>|</span>
-            <a href="#" className="hover:text-foreground">Política de Privacidade</a>
+            <Link to="/privacy$policy" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Política de Privacidade</Link>
+            <span>|</span>
+            <Link to="/return-policy" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Política de Devolução</Link>
+            <span>|</span>
+            <Link to="/cancellation-policy" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Política de Cancelamento</Link>
           </div>
 
           <div className="flex items-center gap-3">
@@ -124,9 +214,14 @@ const Footer = () => {
             </a>
           </div>
 
-          <p className="text-sm text-muted-foreground">
-            © 2025 Eleven Auto Parts. Todos os direitos reservados.
-          </p>
+          <div className="flex flex-col items-center md:items-end gap-1">
+            <p className="text-sm text-muted-foreground">
+              © 2025 Eleven Auto Parts. Todos os direitos reservados.
+            </p>
+            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+              Desenvolvido por <a href="https://tglsolutions.com.br" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors font-semibold text-[#0095C8]">TGL Solutions</a>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

@@ -49,17 +49,6 @@ const Products = () => {
                   Explore as palhetas da AutoParts e escolha o melhor entre nossas mais de 45 peças automotivas – projetadas para todos os tipos de veículos, de hatchs compactos a pickups robustas, passando por SUVs, sedans e utilitários.
                 </p>
               </div>
-
-              <div className="lg:w-1/3 bg-muted rounded-xl p-6">
-                <h3 className="font-semibold mb-2">Ofertas exclusivas</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  30% off em itens selecionados
-                </p>
-                <button className="btn-primary flex items-center gap-2">
-                  Ver todos os produtos
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
             </div>
           </div>
 
@@ -149,17 +138,6 @@ const Products = () => {
                 Explore as palhetas da AutoParts e escolha o melhor entre nossas mais de 45 peças automotivas – projetadas para todos os tipos de veículos, de hatchs compactos a pickups robustas, passando por SUVs, sedans e utilitários.
               </p>
             </div>
-
-            <div className="lg:w-1/3 bg-muted rounded-xl p-6">
-              <h3 className="font-semibold mb-2">Ofertas exclusivas</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                30% off em itens selecionados
-              </p>
-              <button className="btn-primary flex items-center gap-2">
-                Ver todos os produtos
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </div>
 
@@ -176,8 +154,8 @@ const Products = () => {
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`category-tab ${activeCategory === cat.id ? 'category-tab-active' : 'category-tab-inactive'
+                onClick={() => setActiveCategory(cat.slug)}
+                className={`category-tab ${activeCategory === cat.slug ? 'category-tab-active' : 'category-tab-inactive'
                   }`}
               >
                 {cat.nome}

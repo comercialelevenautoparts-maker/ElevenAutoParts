@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { User, Gift, Package, Heart, LogOut, Search, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, Search, ChevronRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrders } from '@/hooks/useOrders';
 import { Input } from '@/components/ui/input';
+import ProfileSidebar from '@/components/account/ProfileSidebar';
 
 const Orders = () => {
   const [activeTab, setActiveTab] = useState<'concluidos' | 'em_analise' | 'cancelados'>('concluidos');
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { data: orders, isLoading } = useOrders();
   const navigate = useNavigate();
 
@@ -18,13 +19,6 @@ const Orders = () => {
     navigate('/login');
     return null;
   }
-
-  const menuItems = [
-    { icon: User, label: 'Informações pessoais', href: '/perfil' },
-    { icon: Gift, label: 'Indique e ganhe', href: '#' },
-    { icon: Package, label: 'Meus pedidos', href: '/pedidos', active: true },
-    { icon: Heart, label: 'Minha lista de desejos', href: '/favoritos' },
-  ];
 
   const tabs = [
     { id: 'concluidos', label: 'Concluídos' },
@@ -47,32 +41,7 @@ const Orders = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <nav className="space-y-2">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
-                    item.active ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              ))}
-              <button
-                onClick={() => signOut()}
-                className="w-full flex items-center gap-3 p-3 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Sair</span>
-              </button>
-            </nav>
-          </div>
+          <ProfileSidebar />
 
           {/* Content */}
           <div className="lg:col-span-3">
@@ -82,11 +51,10 @@ const Orders = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                      activeTab === tab.id
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab.id
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted hover:bg-muted/80'
-                    }`}
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -139,11 +107,10 @@ const Orders = () => {
                         </td>
                         <td className="p-4">R$ {order.valor_total.toFixed(2)}</td>
                         <td className="p-4">
-                          <span className={`px-2 py-1 rounded text-sm font-medium ${
-                            order.status === 'pago' ? 'bg-green-100 text-green-700' :
-                            order.status === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${order.status === 'pago' ? 'bg-green-100 text-green-700' :
+                              order.status === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                            }`}>
                             {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                           </span>
                         </td>

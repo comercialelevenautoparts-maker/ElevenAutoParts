@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Package, User as UserIcon, Settings } from 'lucide-react';
+import { LogOut, Package, User as UserIcon, Truck, Heart, Gift } from 'lucide-react';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -36,6 +36,13 @@ const Header = () => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   const scrollToFooter = () => {
     const footerElement = document.getElementById('newsletter-section');
@@ -77,6 +84,9 @@ const Header = () => {
                     ? 'bg-[#DFB956] text-white'
                     : 'text-foreground hover:bg-[#DFB956]/100 hover:text-white'
                     }`}
+                  onClick={() => {
+                    scrollToTop();
+                  }}
                 >
                   {item.label}
                 </Link>
@@ -92,7 +102,11 @@ const Header = () => {
             </button>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center">
+            <Link
+              to="/"
+              className="flex items-center"
+              onClick={scrollToTop}
+            >
               <img src={logoImage} alt="Eleven Auto Parts" className="h-12 md:h-14 object-contain" />
             </Link>
 
@@ -146,7 +160,7 @@ const Header = () => {
                           }}
                         >
                           <UserIcon className="w-5 h-5" />
-                          Meu Perfil
+                          Informações pessoais
                         </Button>
                         <Button
                           variant="ghost"
@@ -157,14 +171,40 @@ const Header = () => {
                           }}
                         >
                           <Package className="w-5 h-5" />
-                          Meus Pedidos
+                          Meus pedidos
                         </Button>
                         <Button
                           variant="ghost"
                           className="justify-start gap-3 h-12 text-base font-normal"
+                          onClick={() => {
+                            setIsProfileOpen(false);
+                            navigate('/favoritos');
+                          }}
                         >
-                          <Settings className="w-5 h-5" />
-                          Configurações
+                          <Heart className="w-5 h-5" />
+                          Minha lista de desejos
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="justify-start gap-3 h-12 text-base font-normal"
+                          onClick={() => {
+                            setIsProfileOpen(false);
+                            navigate('/indique-e-ganhe');
+                          }}
+                        >
+                          <Gift className="w-5 h-5" />
+                          Indique e ganhe
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="justify-start gap-3 h-12 text-base font-normal"
+                          onClick={() => {
+                            setIsProfileOpen(false);
+                            navigate('/rastreio');
+                          }}
+                        >
+                          <Truck className="w-5 h-5" />
+                          Rastreamento
                         </Button>
                       </div>
 
@@ -186,7 +226,7 @@ const Header = () => {
                   <User className="w-5 h-5" />
                 </Link>
               )}
-              <button className="icon-button icon-button-outline">
+              <button className="icon-button icon-button-outline" onClick={() => navigate('/suporte')}>
                 <Headphones className="w-5 h-5" />
               </button>
             </div>
@@ -205,7 +245,10 @@ const Header = () => {
                     ? 'bg-[#DFB956] text-white'
                     : 'text-foreground hover:bg-[#DFB956]/80 hover:text-white'
                     }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    scrollToTop();
+                  }}
                 >
                   {item.label}
                 </Link>
@@ -257,7 +300,10 @@ const Header = () => {
                 </Link>
                 <button
                   className="w-full text-center text-primary font-medium mt-2 hover:underline text-sm"
-                  onClick={() => setIsCartOpen(false)}
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    navigate('/carrinho');
+                  }}
                 >
                   VER CARRINHO
                 </button>

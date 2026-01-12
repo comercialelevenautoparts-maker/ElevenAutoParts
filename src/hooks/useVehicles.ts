@@ -10,6 +10,7 @@ export interface VeiculoCompativel {
   conector: string;
   tamanho_motorista: string;
   tamanho_passageiro: string | null;
+  imagem_conector?: string;
 }
 
 export const useMarcas = () => {
@@ -109,7 +110,7 @@ export const useCompatibilidade = (marca: string, modelo: string, ano: number) =
   return useQuery({
     queryKey: ['veiculos-compatibilidade', marca, modelo, ano],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: veiculoData, error: veiculoError } = await supabase
         .from('veiculos_compativeis')
         .select('*')
         .eq('marca', marca)
@@ -118,8 +119,25 @@ export const useCompatibilidade = (marca: string, modelo: string, ano: number) =
         .or(`ano_fim.gte.${ano},ano_fim.is.null`)
         .single();
 
-      if (error) throw error;
-      return data as VeiculoCompativel;
+      if (veiculoError) throw veiculoError;
+
+      // Fetch connector image using the code
+      if (veiculoData && veiculoData.conector) {
+        const { data: conectorData } = await (supabase as any)
+          .from('conectores')
+          .select('imagem_url')
+          .eq('codigo', veiculoData.conector)
+          .single();
+
+        if (conectorData) {
+          return {
+            ...veiculoData,
+            imagem_conector: conectorData.imagem_url
+          } as VeiculoCompativel;
+        }
+      }
+
+      return veiculoData as VeiculoCompativel;
     },
     enabled: !!marca && !!modelo && !!ano,
   });

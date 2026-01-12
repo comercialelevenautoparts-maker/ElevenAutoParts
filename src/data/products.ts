@@ -83,7 +83,6 @@ export const products: Product[] = [
 export const categories = [
   { id: 'todos', label: 'TODOS' },
   { id: 'palhetas', label: 'PALHETAS' },
-  { id: 'conectores', label: 'CONECTORES' },
   { id: 'borrachas', label: 'BORRACHAS' },
 ];
 

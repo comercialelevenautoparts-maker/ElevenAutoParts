@@ -1,8 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronDown, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMarcas, useModelos, useAnos, useCompatibilidade } from '@/hooks/useVehicles';
-import productShowcase from '@/assets/product-showcase.png';
+import palhetaImg from '@/assets/palheta.png';
+import { useCart } from '@/hooks/useCart';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductVariant {
   id: string;
@@ -22,6 +25,8 @@ const productVariants: ProductVariant[] = [
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -29,6 +34,9 @@ const HeroSection = () => {
   const [selectedMarca, setSelectedMarca] = useState<string>('');
   const [selectedModelo, setSelectedModelo] = useState<string>('');
   const [selectedAno, setSelectedAno] = useState<number | null>(null);
+
+  // Base product for cart
+  const [baseProduct, setBaseProduct] = useState<any>(null);
 
   // Dropdown open states
   const [isMarcaOpen, setIsMarcaOpen] = useState(false);
@@ -47,18 +55,27 @@ const HeroSection = () => {
     selectedAno || 0
   );
 
-  const next = () => {
-    setCurrentIndex((prev) => (prev + 1) % productVariants.length);
-  };
+  // Fetch base product for cart
+  useEffect(() => {
+    const fetchBaseProduct = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('produtos')
+          .select('*')
+          .ilike('nome', '%Palheta%')
+          .limit(1)
+          .single();
 
-  const prev = () => {
-    setCurrentIndex((prev) => (prev - 1 + productVariants.length) % productVariants.length);
-  };
+        if (data) {
+          setBaseProduct(data);
+        }
+      } catch (error) {
+        console.error('Error fetching base product:', error);
+      }
+    };
 
-  const selectProduct = (index: number) => {
-    setCurrentIndex(index);
-    setIsDropdownOpen(false);
-  };
+    fetchBaseProduct();
+  }, []);
 
   const handleMarcaSelect = (marca: string) => {
     setSelectedMarca(marca);
@@ -88,6 +105,34 @@ const HeroSection = () => {
     navigate('/produtos');
   };
 
+  const handleAddToCart = () => {
+    if (!compatibilidade) return;
+
+    // Use default values if baseProduct is not found
+    const productToAdd = baseProduct || {
+      id: 'palheta-universal-default',
+      nome: 'Palheta Limpa Para-Brisa Universal',
+      preco: 59.90, // Default price
+      imagem_principal: palhetaImg
+    };
+
+    // Add Single Kit Item
+    addToCart({
+      id: productToAdd.id,
+      name: `Kit Palhetas Premium - ${selectedMarca} ${selectedModelo} (${selectedAno})`,
+      price: productToAdd.preco,
+      image: productToAdd.imagem_principal || palhetaImg,
+      size: `Mot: ${compatibilidade.tamanho_motorista}" ${compatibilidade.tamanho_passageiro ? `/ Pas: ${compatibilidade.tamanho_passageiro}"` : ''} (${compatibilidade.conector})`,
+    }, 1);
+
+    toast({
+      title: "Kit adicionado ao carrinho!",
+      description: `Kit para ${selectedMarca} ${selectedModelo} adicionado com sucesso.`,
+    });
+
+    navigate('/carrinho');
+  };
+
   return (
     <section className="container mx-auto px-4 py-8 md:py-16 mt-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -112,7 +157,7 @@ const HeroSection = () => {
               </svg>
               Comprar agora
             </button>
-            <button className="nav-link">
+            <button className="nav-link" onClick={() => navigate('/suporte')}>
               Fale conosco
             </button>
           </div>
@@ -140,61 +185,18 @@ const HeroSection = () => {
 
         {/* Right - Product Showcase */}
         <div className="bg-muted rounded-2xl p-6 relative">
-          {/* Header with dropdown and navigation */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 text-foreground font-medium hover:text-primary transition-colors"
-              >
-                {currentProduct.name}
-                <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
 
-              {/* Dropdown */}
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-elevated z-50 py-2">
-                  {productVariants.map((variant, index) => (
-                    <button
-                      key={variant.id}
-                      onClick={() => selectProduct(index)}
-                      className={`w-full px-4 py-2 text-left hover:bg-muted transition-colors ${index === currentIndex ? 'text-primary font-medium' : 'text-foreground'
-                        }`}
-                    >
-                      {variant.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={prev}
-                className="icon-button icon-button-outline bg-background"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={next}
-                className="icon-button icon-button-primary"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Product Image - Full showcase image */}
-          <div className="relative">
-            {/* <img
-              src={productShowcase}
-              alt={currentProduct.name}
-              className="w-full h-auto object-contain"
-            /> */}
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-foreground">
+              Encontre o produto ideal
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Selecione seu veículo para buscar a peça compatível
+            </p>
           </div>
 
           {/* Vehicle Filter Options */}
-          <div className="flex flex-wrap items-start justify-between gap-4 pt-4 border-t border-border mt-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             {/* Debug information */}
             {marcasError && (
               <div className="col-span-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -386,28 +388,74 @@ const HeroSection = () => {
 
           {/* Compatibility Result */}
           {compatibilidade && (
-            <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
-              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Check className="w-4 h-4 text-primary" />
-                Palhetas compatíveis
-              </h4>
-              <div className="grid grid-cols-4 gap-3 text-sm mt-4 mb-8">
-                <div className="flex flex-col">
-                  <span className="text-foreground font-bold">Motorista</span>
-                  <span className="font-medium text-muted-foreground">{compatibilidade.tamanho_motorista}" ({Number(compatibilidade.tamanho_motorista) * 25.4}mm)</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-foreground font-bold">Passageiro</span>
-                  <span className="font-medium text-muted-foreground">{compatibilidade.tamanho_passageiro}" ({Number(compatibilidade.tamanho_passageiro) * 25.4}mm)</span>
-                </div>
-                <div className="flex flex-col col-span-2">
-                  <span className="text-foreground font-bold">Conector</span>
-                  <span className="font-medium text-muted-foreground">{compatibilidade.conector}</span>
-                </div>
+            <div className="mt-6 p-5 bg-card border border-border rounded-xl shadow-lg animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-2 mb-4 border-b border-border pb-3">
+                <Check className="w-5 h-5 text-primary" />
+                <h4 className="font-bold text-lg text-foreground">
+                  Kit compatível encontrado
+                </h4>
               </div>
-              <button className="mt-3 w-full btn-primary text-sm py-2">
-                Ver Produtos Compatíveis
-              </button>
+
+              <div className="flex flex-col gap-4">
+                {/* Kit Visual Representation */}
+                <div className="flex gap-4 items-center justify-center bg-muted/30 p-4 rounded-lg">
+                  <div className="relative group">
+                    <img
+                      src={palhetaImg}
+                      alt="Palheta Premium"
+                      className="h-24 w-auto object-contain transition-transform group-hover:scale-105"
+                    />
+                  </div>
+                  <span className="text-xl text-muted-foreground font-light">+</span>
+                  <div className="relative group">
+                    {compatibilidade.imagem_conector ? (
+                      <img
+                        src={compatibilidade.imagem_conector}
+                        alt={`Conector ${compatibilidade.conector}`}
+                        className="h-20 w-auto object-contain bg-white rounded p-1 shadow-sm transition-transform group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="h-20 w-20 flex items-center justify-center bg-muted rounded border border-dashed text-xs text-muted-foreground">
+                        {compatibilidade.conector}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Kit Details */}
+                <div>
+                  <h5 className="font-semibold text-foreground mb-2">
+                    Kit limpador para {selectedMarca} {selectedModelo} {selectedAno}
+                  </h5>
+                  <ul className="space-y-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                      1x Palheta limpador para-brisa premium {compatibilidade.tamanho_motorista}" (Motorista)
+                    </li>
+                    {compatibilidade.tamanho_passageiro && (
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        1x Palheta limpador para-brisa premium {compatibilidade.tamanho_passageiro}" (Passageiro)
+                      </li>
+                    )}
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                      1x Adaptador/conector específico ({compatibilidade.conector})
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Action */}
+                <button
+                  className="w-full btn-primary py-3 font-semibold shadow-md active:scale-95 transition-all text-base flex justify-center items-center gap-2"
+                  onClick={handleAddToCart}
+                >
+                  Adicionar ao carrinho
+                </button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Entrega garantida para todo o Brasil
+                </p>
+              </div>
             </div>
           )}
         </div>

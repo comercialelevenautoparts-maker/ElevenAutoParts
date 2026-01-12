@@ -43,7 +43,7 @@ const SeamlessExperience = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {steps.map((step, index) => (
           <div key={index} className="relative">
-            <div className="text-6xl md:text-7xl font-bold text-muted/50 mb-4">
+            <div className="text-6xl md:text-7xl font-bold text-gray-300 mb-4">
               {step.number}
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>

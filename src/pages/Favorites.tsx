@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Gift, Package, Heart, LogOut, ChevronRight, ShoppingBag, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Star } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useCart } from '@/hooks/useCart';
 import { Tables } from '@/integrations/supabase/types';
+import ProfileSidebar from '@/components/account/ProfileSidebar';
 
 const Favorites = () => {
   const { user } = useAuth();
@@ -93,13 +94,6 @@ const Favorites = () => {
     return null;
   }
 
-  const menuItems = [
-    { icon: User, label: 'Informações pessoais', href: '/perfil' },
-    { icon: Gift, label: 'Indique e ganhe', href: '#' },
-    { icon: Package, label: 'Meus pedidos', href: '/pedidos' },
-    { icon: Heart, label: 'Minha lista de desejos', href: '/favoritos', active: true },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -108,33 +102,7 @@ const Favorites = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <nav className="space-y-2">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`flex items-center justify-between p-3 rounded-lg transition-colors ${item.active ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-                    }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4" />
-                </Link>
-              ))}
-              <button
-                onClick={() => {
-                  // Sign out functionality would be here
-                }}
-                className="w-full flex items-center gap-3 p-3 rounded-lg text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Sair</span>
-              </button>
-            </nav>
-          </div>
+          <ProfileSidebar />
 
           {/* Content */}
           <div className="lg:col-span-3">

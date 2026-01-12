@@ -20,8 +20,21 @@
   <meta name="twitter:site" content="@ElevenAutoParts" />
   <meta name="twitter:image" content="/logo-eleven.png" />
 
-  <link rel="icon" type="image/png" href="/logo-eleven.png" />
-  <link rel="canonical" href="https://elevenautparts.com" />
+  <link id="dynamic-favicon" rel="icon" href="/logo-eleven.png" />
+  <script>
+    (function () {
+      const link = document.getElementById('dynamic-favicon');
+      const updateFavicon = () => {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        link.href = isDark ? '/logo-dark.png' : '/logo-white.png';
+      };
+
+      updateFavicon();
+
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateFavicon);
+    })();
+  </script>
+  <link rel="canonical" href="https://elevenautoparts.com" />
 </head>
 
 <body>
