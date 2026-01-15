@@ -200,6 +200,8 @@ const Products = () => {
                 description={product.descricao || ''}
                 price={product.preco_promocional || product.preco}
                 image={product.imagem_principal || ''}
+                stripePriceId={product.stripe_price_id}
+                stockQuantity={product.estoque}
               />
             ))}
           </div>

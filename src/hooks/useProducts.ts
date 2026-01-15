@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Produto, Categoria, ProdutoTamanho } from '@/types/database';
+import { Produto, Categoria, ProdutoTamanho, ProdutoImagem } from '@/types/database';
 
 export const useProducts = (categorySlug?: string) => {
   return useQuery({
@@ -10,8 +10,8 @@ export const useProducts = (categorySlug?: string) => {
         .from('produtos')
         .select(`
           *,
-          produto_categorias!inner(
-            categorias!inner(slug, nome)
+          produto_categorias(
+            categorias(slug, nome)
           )
         `)
         .eq('ativo', true);
