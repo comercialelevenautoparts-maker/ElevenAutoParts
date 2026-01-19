@@ -72,6 +72,7 @@ export const useCreateOrder = () => {
         preco_unitario: number;
         subtotal: number;
         tamanho?: string;
+        metadata?: Record<string, any>;
       }[];
     }) => {
       if (!user) throw new Error('Not authenticated');

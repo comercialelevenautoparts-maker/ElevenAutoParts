@@ -4,25 +4,25 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/products/ProductCard';
 import ProductCarousel from '@/components/products/ProductCarousel';
-import { useProducts } from '@/hooks/useProducts';
-import { useCategories } from '@/hooks/useProducts';
+import { useStripeProducts, useProductCategories } from '@/hooks/useStripeProducts';
 
 const Products = () => {
   const [activeCategory, setActiveCategory] = useState('todos');
   const [sortBy, setSortBy] = useState('recentes');
 
-  const { data: allProducts = [], isLoading } = useProducts(activeCategory);
-  const { data: categories = [] } = useCategories();
+  // Buscando apenas produtos integrados com a Stripe
+  const { data: allProducts = [], isLoading } = useStripeProducts(activeCategory);
+  const { data: categories = [] } = useProductCategories() as any;
 
   // Apply sorting based on sortBy
   const sortedProducts = (() => {
     switch (sortBy) {
       case 'alta':
         // Sort by price descending (premium items)
-        return [...allProducts].sort((a, b) => (b.preco_promocional || b.preco) - (a.preco_promocional || a.preco));
+        return [...allProducts].sort((a, b) => (b.price_promotional || b.price) - (a.price_promotional || a.price));
       case 'populares':
         // Sort by name alphabetically
-        return [...allProducts].sort((a, b) => a.nome.localeCompare(b.nome));
+        return [...allProducts].sort((a, b) => a.name.localeCompare(b.name));
       case 'recentes':
       default:
         // Sort by creation date (most recent first)
@@ -55,44 +55,16 @@ const Products = () => {
           {/* Category Tabs and Sort */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setActiveCategory('todos')}
-                className={`category-tab ${activeCategory === 'todos' ? 'category-tab-active' : 'category-tab-inactive'
-                  }`}
-              >
-                Todos
-              </button>
-              {categories.map((cat) => (
+              {categories.map((cat: any) => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
                   className={`category-tab ${activeCategory === cat.id ? 'category-tab-active' : 'category-tab-inactive'
                     }`}
                 >
-                  {cat.nome}
+                  {cat.label}
                 </button>
               ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSortBy('recentes')}
-                className={`category-tab ${sortBy === 'recentes' ? 'category-tab-active' : 'category-tab-inactive'}`}
-              >
-                Mais recentes
-              </button>
-              <button
-                onClick={() => setSortBy('alta')}
-                className={`category-tab ${sortBy === 'alta' ? 'category-tab-active' : 'category-tab-inactive'}`}
-              >
-                Em alta
-              </button>
-              <button
-                onClick={() => setSortBy('populares')}
-                className={`category-tab ${sortBy === 'populares' ? 'category-tab-active' : 'category-tab-inactive'}`}
-              >
-                Populares
-              </button>
             </div>
           </div>
 
@@ -144,44 +116,16 @@ const Products = () => {
         {/* Category Tabs and Sort */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActiveCategory('todos')}
-              className={`category-tab ${activeCategory === 'todos' ? 'category-tab-active' : 'category-tab-inactive'
-                }`}
-            >
-              Todos
-            </button>
-            {categories.map((cat) => (
+            {categories.map((cat: any) => (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.slug)}
-                className={`category-tab ${activeCategory === cat.slug ? 'category-tab-active' : 'category-tab-inactive'
+                onClick={() => setActiveCategory(cat.id)}
+                className={`category-tab ${activeCategory === cat.id ? 'category-tab-active' : 'category-tab-inactive'
                   }`}
               >
-                {cat.nome}
+                {cat.label}
               </button>
             ))}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSortBy('recentes')}
-              className={`category-tab ${sortBy === 'recentes' ? 'category-tab-active' : 'category-tab-inactive'}`}
-            >
-              Mais recentes
-            </button>
-            <button
-              onClick={() => setSortBy('alta')}
-              className={`category-tab ${sortBy === 'alta' ? 'category-tab-active' : 'category-tab-inactive'}`}
-            >
-              Em alta
-            </button>
-            <button
-              onClick={() => setSortBy('populares')}
-              className={`category-tab ${sortBy === 'populares' ? 'category-tab-active' : 'category-tab-inactive'}`}
-            >
-              Populares
-            </button>
           </div>
         </div>
 
@@ -192,16 +136,16 @@ const Products = () => {
             Descubra a linha completa de palhetas que une tecnologia, durabilidade e design – versatilidade perfeita em qualquer clima.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {sortedProducts.map((product, index) => (
+            {sortedProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
-                name={product.nome}
-                description={product.descricao || ''}
-                price={product.preco_promocional || product.preco}
-                image={product.imagem_principal || ''}
-                stripePriceId={product.stripe_price_id}
-                stockQuantity={product.estoque}
+                name={product.name}
+                description={product.description || ''}
+                price={product.price_promotional || product.price}
+                image={product.image || ''}
+                stripePriceId={product.stripe_price_id || undefined}
+                stockQuantity={product.stock_quantity}
               />
             ))}
           </div>

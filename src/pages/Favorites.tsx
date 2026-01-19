@@ -25,7 +25,7 @@ const Favorites = () => {
     } else {
       navigate('/login');
     }
-  }, [user, navigate, loadFavorites]);
+  }, [user]); // Only re-run if user changes. remove loadFavorites from dependencies to prevent loops if it's not memoized.
 
   const handleRemoveFavorite = async (produtoId: string) => {
     try {
@@ -106,137 +106,140 @@ const Favorites = () => {
 
           {/* Content */}
           <div className="lg:col-span-3">
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-              </div>
-            ) : favorites.length === 0 ? (
-              <div className="bg-card border border-border rounded-xl p-12 text-center">
-                <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-foreground mb-2">Sua lista de desejos está vazia</h2>
-                <p className="text-muted-foreground mb-6">
-                  Adicione produtos que você gosta para salvar na sua lista de desejos
-                </p>
-                <Button asChild>
-                  <Link to="/">Ver produtos</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {favorites.map((favorite) => {
-                  const produto = favorite.produto;
-                  const produtoTamanhos = (produto as any).produto_tamanhos || [];
+            {(() => {
+              const validFavorites = favorites.filter(fav => fav.produto);
 
-                  return (
-                    <div
-                      key={favorite.id}
-                      className="bg-card border border-border rounded-xl p-6 flex flex-col sm:flex-row gap-6"
-                    >
-                      <div className="w-full sm:w-32 h-32 flex-shrink-0">
-                        <img
-                          src={produto.imagem_principal || '/placeholder.svg'}
-                          alt={produto.nome}
-                          className="w-full h-full object-contain rounded-lg"
-                        />
-                      </div>
+              if (validFavorites.length === 0) {
+                return (
+                  <div className="bg-card border border-border rounded-xl p-12 text-center">
+                    <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-foreground mb-2">Sua lista de desejos está vazia</h2>
+                    <p className="text-muted-foreground mb-6">
+                      Adicione produtos que você gosta para salvar na sua lista de desejos
+                    </p>
+                    <Button asChild>
+                      <Link to="/">Ver produtos</Link>
+                    </Button>
+                  </div>
+                );
+              }
 
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <h3 className="text-xl font-bold text-foreground">{produto.nome}</h3>
-                          <button
-                            onClick={() => handleRemoveFavorite(produto.id)}
-                            className="text-destructive hover:text-destructive/80"
-                          >
-                            <Heart className="w-6 h-6 fill-current" />
-                          </button>
+              return (
+                <div className="space-y-6">
+                  {validFavorites.map((favorite) => {
+                    const produto = favorite.produto!;
+                    const produtoTamanhos = (produto as any).produto_tamanhos || [];
+
+                    return (
+                      <div
+                        key={favorite.id}
+                        className="bg-card border border-border rounded-xl p-6 flex flex-col sm:flex-row gap-6"
+                      >
+                        <div className="w-full sm:w-32 h-32 flex-shrink-0">
+                          <img
+                            src={produto.imagem_principal || '/placeholder.svg'}
+                            alt={produto.nome}
+                            className="w-full h-full object-contain rounded-lg"
+                          />
                         </div>
 
-                        <p className="text-muted-foreground mt-1">{produto.descricao}</p>
-
-                        <div className="flex items-center gap-2 mt-2">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-muted-foreground'
-                                  }`}
-                              />
-                            ))}
+                        <div className="flex-1">
+                          <div className="flex justify-between">
+                            <h3 className="text-xl font-bold text-foreground">{produto.nome}</h3>
+                            <button
+                              onClick={() => handleRemoveFavorite(produto.id)}
+                              className="text-destructive hover:text-destructive/80"
+                            >
+                              <Heart className="w-6 h-6 fill-current" />
+                            </button>
                           </div>
-                          <span className="text-sm text-muted-foreground">(42 avaliações)</span>
-                        </div>
 
-                        <div className="flex items-center gap-4 mt-4">
-                          {produto.preco_promocional && produto.preco_promocional < produto.preco ? (
-                            <>
-                              <span className="text-2xl font-bold text-foreground">
-                                R$ {produto.preco_promocional.toFixed(2)}
-                              </span>
-                              <span className="text-lg text-muted-foreground line-through">
-                                R$ {produto.preco.toFixed(2)}
-                              </span>
-                              <span className="bg-destructive text-destructive-foreground px-2 py-1 rounded text-sm font-medium">
-                                {Math.round(((produto.preco - produto.preco_promocional) / produto.preco) * 100)}% OFF
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-2xl font-bold text-foreground">
-                              R$ {produto.preco.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
+                          <p className="text-muted-foreground mt-1">{produto.descricao}</p>
 
-                        {/* Size Selection */}
-                        {produtoTamanhos && produtoTamanhos.length > 0 && (
-                          <div className="mt-4">
-                            <h4 className="font-medium text-foreground mb-2">Tamanho</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {produtoTamanhos.map((tamanho) => (
-                                <button
-                                  key={tamanho.id}
-                                  className={`px-3 py-1.5 border rounded-lg text-sm ${selectedSize[produto.id] === tamanho.tamanho
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-border hover:border-primary/50'
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-muted-foreground'
                                     }`}
-                                  onClick={() =>
-                                    setSelectedSize(prev => ({
-                                      ...prev,
-                                      [produto.id]: tamanho.tamanho
-                                    }))
-                                  }
-                                >
-                                  {tamanho.tamanho}
-                                </button>
+                                />
                               ))}
                             </div>
+                            <span className="text-sm text-muted-foreground">(42 avaliações)</span>
                           </div>
-                        )}
 
-                        <div className="flex flex-wrap gap-3 mt-6">
-                          <Button
-                            onClick={() => handleAddToCart(produto)}
-                            className="flex-1 bg-primary hover:bg-primary/90"
-                          >
-                            <ShoppingBag className="w-4 h-4 mr-2" />
-                            Adicionar ao Carrinho
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="border-primary text-primary hover:bg-primary/5"
-                            asChild
-                          >
-                            <Link to={`/produto/${produto.id}`}>
-                              Ver detalhes
-                            </Link>
-                          </Button>
+                          <div className="flex items-center gap-4 mt-4">
+                            {produto.preco_promocional && produto.preco_promocional < produto.preco ? (
+                              <>
+                                <span className="text-2xl font-bold text-foreground">
+                                  R$ {produto.preco_promocional.toFixed(2)}
+                                </span>
+                                <span className="text-lg text-muted-foreground line-through">
+                                  R$ {produto.preco.toFixed(2)}
+                                </span>
+                                <span className="bg-destructive text-destructive-foreground px-2 py-1 rounded text-sm font-medium">
+                                  {Math.round(((produto.preco - produto.preco_promocional) / produto.preco) * 100)}% OFF
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-2xl font-bold text-foreground">
+                                R$ {produto.preco.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Size Selection */}
+                          {produtoTamanhos && produtoTamanhos.length > 0 && (
+                            <div className="mt-4">
+                              <h4 className="font-medium text-foreground mb-2">Tamanho</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {produtoTamanhos.map((tamanho) => (
+                                  <button
+                                    key={tamanho.id}
+                                    className={`px-3 py-1.5 border rounded-lg text-sm ${selectedSize[produto.id] === tamanho.tamanho
+                                      ? 'border-primary bg-primary/10 text-primary'
+                                      : 'border-border hover:border-primary/50'
+                                      }`}
+                                    onClick={() =>
+                                      setSelectedSize(prev => ({
+                                        ...prev,
+                                        [produto.id]: tamanho.tamanho
+                                      }))
+                                    }
+                                  >
+                                    {tamanho.tamanho}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap gap-3 mt-6">
+                            <Button
+                              onClick={() => handleAddToCart(produto)}
+                              className="flex-1 bg-primary hover:bg-primary/90"
+                            >
+                              <ShoppingBag className="w-4 h-4 mr-2" />
+                              Adicionar ao Carrinho
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="border-primary text-primary hover:bg-primary/5"
+                              asChild
+                            >
+                              <Link to={`/produto/${produto.id}`}>
+                                Ver detalhes
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}          </div>
         </div>
       </main>
       <Footer />

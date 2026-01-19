@@ -23,6 +23,7 @@ export type Database = {
           produto_id: string
           quantidade: number
           tamanho: string | null
+          metadata: Json | null
         }
         Insert: {
           carrinho_id: string
@@ -32,6 +33,7 @@ export type Database = {
           produto_id: string
           quantidade?: number
           tamanho?: string | null
+          metadata?: Json | null
         }
         Update: {
           carrinho_id?: string
@@ -41,6 +43,7 @@ export type Database = {
           produto_id?: string
           quantidade?: number
           tamanho?: string | null
+          metadata?: Json | null
         }
         Relationships: [
           {
@@ -364,6 +367,7 @@ export type Database = {
       pedido_itens: {
         Row: {
           id: string
+          metadata: Json | null
           nome_produto: string
           pedido_id: string
           preco_unitario: number
@@ -374,6 +378,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          metadata?: Json | null
           nome_produto: string
           pedido_id: string
           preco_unitario: number
@@ -384,6 +389,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          metadata?: Json | null
           nome_produto?: string
           pedido_id?: string
           preco_unitario?: number

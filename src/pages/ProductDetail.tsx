@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Truck, ChevronLeft, ChevronRight, Star, Minus, Plus, ArrowLeft } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { useProduct } from '@/hooks/useProducts';
+import { useStripeProduct } from '@/hooks/useStripeProducts';
 import { useCart } from '@/hooks/useCart';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Button } from '@/components/ui/button';
@@ -17,14 +17,14 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { user } = useAuth();
-  const { data: product, isLoading, error } = useProduct(id || '');
+  const { data: product, isLoading, error } = useStripeProduct(id || '');
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
   // Obter imagens principais e secundárias
   const allImages = [
-    ...(product?.imagem_principal ? [{ url_imagem: product.imagem_principal, principal: true }] : []),
+    ...(product?.image ? [{ url_imagem: product.image, principal: true }] : []),
     ...(product?.produto_imagens?.map(img => ({ url_imagem: img.url_imagem, principal: img.principal })) || [])
   ];
   const [selectedSize, setSelectedSize] = useState('');
@@ -87,20 +87,20 @@ const ProductDetail = () => {
 
     addToCart({
       id: product.id,
-      name: product.nome,
-      price: product.preco_promocional || product.preco,
-      image: product.imagem_principal || '',
+      name: product.name,
+      price: product.price_promotional || product.price,
+      image: product.image || '',
       size: selectedSize,
     }, quantity);
 
     toast({
       title: "Produto adicionado!",
-      description: `${product.nome} foi adicionado ao seu carrinho.`,
+      description: `${product.name} foi adicionado ao seu carrinho.`,
     });
   };
 
   const incrementQuantity = () => {
-    if (quantity < (product.estoque || 0)) {
+    if (quantity < (product.stock_quantity || 0)) {
       setQuantity(quantity + 1);
     }
   };
@@ -129,7 +129,7 @@ const ProductDetail = () => {
       const isFav = isFavorite(product.id);
       toast({
         title: isFav ? "Produto adicionado aos favoritos!" : "Produto removido dos favoritos!",
-        description: `${product.nome} ${isFav ? 'foi adicionado' : 'foi removido'} da sua lista de desejos.`,
+        description: `${product.name} ${isFav ? 'foi adicionado' : 'foi removido'} da sua lista de desejos.`,
       });
     } catch (error) {
       toast({
@@ -157,11 +157,11 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="bg-muted rounded-xl aspect-square flex items-center justify-center overflow-hidden">
+            <div className="bg-white rounded-xl aspect-square flex items-center justify-center overflow-hidden border border-border">
               {allImages.length > 0 ? (
                 <img
                   src={allImages[selectedImage]?.url_imagem}
-                  alt={product.nome}
+                  alt={product.name}
                   className="w-full h-full object-contain"
                 />
               ) : (
@@ -180,7 +180,7 @@ const ProductDetail = () => {
                   >
                     <img
                       src={img.url_imagem}
-                      alt={`${product.nome} - ${index + 1}`}
+                      alt={`${product.name} - ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -192,7 +192,7 @@ const ProductDetail = () => {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">{product.nome}</h1>
+              <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
               <div className="flex items-center gap-2 mt-2">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
@@ -208,26 +208,26 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              {product.preco_promocional && product.preco_promocional < product.preco ? (
+              {product.price_promotional && product.price_promotional < product.price ? (
                 <>
                   <span className="text-3xl font-bold text-foreground">
-                    R$ {(product.preco_promocional * quantity).toFixed(2)}
+                    R$ {(product.price_promotional * quantity).toFixed(2)}
                   </span>
                   <span className="text-xl text-muted-foreground line-through">
-                    R$ {(product.preco * quantity).toFixed(2)}
+                    R$ {(product.price * quantity).toFixed(2)}
                   </span>
                   <span className="bg-destructive text-destructive-foreground px-2 py-1 rounded text-sm font-medium">
-                    {Math.round(((product.preco - product.preco_promocional) / product.preco) * 100)}% OFF
+                    {Math.round(((product.price - product.price_promotional) / product.price) * 100)}% OFF
                   </span>
                 </>
               ) : (
                 <span className="text-3xl font-bold text-foreground">
-                  R$ {(product.preco * quantity).toFixed(2)}
+                  R$ {(product.price * quantity).toFixed(2)}
                 </span>
               )}
             </div>
 
-            <p className="text-foreground">{product.descricao}</p>
+            <p className="text-foreground">{product.description}</p>
 
             {/* Size Selection */}
             {product.produto_tamanhos && product.produto_tamanhos.length > 0 && (
@@ -266,13 +266,13 @@ const ProductDetail = () => {
                   <button
                     onClick={incrementQuantity}
                     className="p-2 hover:bg-muted rounded-r-lg"
-                    disabled={quantity >= (product.estoque || 0)}
+                    disabled={quantity >= (product.stock_quantity || 0)}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  Estoque: {product.estoque || 0} {(product.estoque || 0) === 1 ? 'unidade' : 'unidades'}
+                  Estoque: {product.stock_quantity || 0} {(product.stock_quantity || 0) === 1 ? 'unidade' : 'unidades'}
                 </span>
               </div>
             </div>
@@ -282,10 +282,10 @@ const ProductDetail = () => {
               <Button
                 onClick={handleAddToCart}
                 className="flex-1 bg-primary hover:bg-primary/90 py-6 text-lg"
-                disabled={(product.estoque || 0) <= 0}
+                disabled={(product.stock_quantity || 0) <= 0}
               >
                 <ShoppingBag className="w-5 h-5 mr-2" />
-                {(product.estoque || 0) <= 0 ? 'Produto Indisponível' : 'Adicionar ao Carrinho'}
+                {(product.stock_quantity || 0) <= 0 ? 'Produto Indisponível' : 'Adicionar ao Carrinho'}
               </Button>
               <Button
                 variant="outline"
@@ -307,26 +307,6 @@ const ProductDetail = () => {
                 Calcular frete e prazo de entrega na próxima etapa
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Related Products */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-foreground mb-6">Produtos Relacionados</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div key={idx} className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow">
-                <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
-                  <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
-                </div>
-                <h3 className="font-semibold text-foreground">Produto Relacionado {idx + 1}</h3>
-                <p className="text-sm text-muted-foreground mt-1">Descrição breve do produto</p>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="font-bold text-foreground">R$ 49,90</span>
-                  <span className="text-sm text-muted-foreground line-through">R$ 59,90</span>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </main>

@@ -62,9 +62,11 @@ const HeroSection = () => {
         const { data, error } = await supabase
           .from('produtos')
           .select('*')
+          .eq('ativo', true)
+          .not('stripe_price_id', 'is', null)
           .ilike('nome', '%Palheta%')
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (data) {
           setBaseProduct(data);
@@ -108,21 +110,38 @@ const HeroSection = () => {
   const handleAddToCart = () => {
     if (!compatibilidade) return;
 
-    // Use default values if baseProduct is not found
-    const productToAdd = baseProduct || {
-      id: 'palheta-universal-default',
-      nome: 'Palheta Limpa Para-Brisa Universal',
-      preco: 59.90, // Default price
-      imagem_principal: palhetaImg
-    };
+    // Base product must be a real Stripe product to work with checkout
+    const productToAdd = baseProduct;
+
+    if (!productToAdd) {
+      toast({
+        title: "Produto não disponível",
+        description: "Não foi possível encontrar o produto base para este kit na Stripe.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     // Add Single Kit Item
     addToCart({
       id: productToAdd.id,
-      name: `Kit Palhetas Premium - ${selectedMarca} ${selectedModelo} (${selectedAno})`,
-      price: productToAdd.preco,
+      name: productToAdd.nome, // Use the real Stripe product name
+      price: productToAdd.preco_promocional || productToAdd.preco,
       image: productToAdd.imagem_principal || palhetaImg,
       size: `Mot: ${compatibilidade.tamanho_motorista}" ${compatibilidade.tamanho_passageiro ? `/ Pas: ${compatibilidade.tamanho_passageiro}"` : ''} (${compatibilidade.conector})`,
+      metadata: {
+        veiculo: {
+          marca: selectedMarca,
+          modelo: selectedModelo,
+          ano: selectedAno,
+          conector: compatibilidade.conector,
+          medidas: {
+            motorista: compatibilidade.tamanho_motorista,
+            passageiro: compatibilidade.tamanho_passageiro
+          }
+        },
+        tipo_kit: 'Premium'
+      }
     }, 1);
 
     toast({

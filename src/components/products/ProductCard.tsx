@@ -84,8 +84,8 @@ const ProductCard = ({
   const isOutOfStock = stockQuantity <= 0;
 
   return (
-    <Link to={`/produto/${id}`} className="block card-product relative group">
-      <div className="aspect-square bg-muted flex items-center justify-center p-6 relative overflow-hidden">
+    <Link to={`/produto/${id}`} className="block card-product relative group border-2 border-gray-200">
+      <div className="aspect-square bg-white rounded-xl flex items-center justify-center p-6 relative overflow-hidden">
         <img
           src={image}
           alt={name}
@@ -109,18 +109,6 @@ const ProductCard = ({
           >
             <ShoppingCart className="w-4 h-4" />
           </button>
-
-          {stripePriceId && (
-            <button
-              onClick={handleBuyNow}
-              disabled={isOutOfStock || isCheckingOut}
-              className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-md font-semibold text-sm shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              title="Comprar agora"
-            >
-              <CreditCard className="w-4 h-4" />
-              {isCheckingOut ? 'Processando...' : 'Comprar'}
-            </button>
-          )}
         </div>
       </div>
 

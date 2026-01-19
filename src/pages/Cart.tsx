@@ -1,27 +1,39 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, Truck, ChevronRight, AlertCircle, Check } from 'lucide-react';
+import { Trash2, Minus, Plus, Truck, ChevronRight, AlertCircle, Check, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
+import { useShipping, ShippingOption } from '@/hooks/useShipping';
+import { toast } from 'sonner';
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCart();
   const [selectedShipping, setSelectedShipping] = useState<string | null>(null);
   const [returnOldDevice, setReturnOldDevice] = useState(false);
+  const [cep, setCep] = useState('');
+  const { calculateShipping, isLoading: isCalculating, options: dynamicOptions } = useShipping();
   const navigate = useNavigate();
 
-  const shippingOptions = [
-    { id: 'basico', name: 'Básico', description: 'Entre 3 e 5 dias úteis', price: 25.00 },
-    { id: 'garantia', name: 'Garantia', description: 'Entre 1 e 2 semanas', price: 49.00 },
-    { id: 'premium', name: 'Premium', description: '1 dia útil', price: 89.00 },
-  ];
-
   const subtotal = getTotalPrice();
-  const shippingPrice = shippingOptions.find((s) => s.id === selectedShipping)?.price || 0;
-  const discount = subtotal * 0.1; // 10% discount
-  const total = subtotal + shippingPrice - discount;
+
+  // Combine static fallback with dynamic options
+  const allShippingOptions = dynamicOptions.length > 0
+    ? dynamicOptions.map(opt => ({
+      id: `dynamic-${opt.id}`,
+      name: opt.name,
+      description: `Entrega via ${opt.company.name} estimada em ${opt.delivery_time} dias`,
+      price: Number(opt.custom_price),
+      logo: opt.company.picture
+    }))
+    : [];
+
+  const selectedOption = allShippingOptions.find((s) => s.id === selectedShipping);
+  const shippingPrice = selectedOption?.price || 0;
+  // Previously there was a 10% discount here. Now we removed it as per request.
+  // Discount will be applied in checkout if Pix is selected (future implementation in Checkout.tsx).
+  const total = subtotal + shippingPrice;
 
   const handleCheckout = () => {
     if (items.length === 0) return;
@@ -68,94 +80,119 @@ const Cart = () => {
                     alt={item.name}
                     className="w-24 h-24 object-contain bg-muted rounded-lg"
                   />
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Palheta</p>
-                        <h3 className="font-semibold">{item.name}</h3>
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-primary font-bold uppercase tracking-wider">Palheta</p>
+                        <h3 className="font-bold text-foreground text-lg leading-tight">{item.name}</h3>
+
+                        {item.metadata?.veiculo && (
+                          <div className="flex flex-col gap-1.5 mt-2">
+                            <div className="inline-flex items-center px-2 py-0.5 bg-primary/20 text-[#B8860B] rounded text-[10px] font-bold uppercase tracking-wider w-fit border border-primary/30">
+                              PARA: {item.metadata.veiculo.marca} {item.metadata.veiculo.modelo} ({item.metadata.veiculo.ano})
+                            </div>
+                            <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
+                              <span>Medidas: {item.metadata.veiculo.medidas?.motorista}" / {item.metadata.veiculo.medidas?.passageiro}"</span>
+                              <span className="text-primary">+</span>
+                              <span>Conector: {item.metadata.veiculo.conector}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className="text-primary font-bold text-lg">R$ {item.price.toFixed(2)}</span>
+                        </div>
                       </div>
+
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="text-primary hover:text-destructive transition-colors"
+                        className="text-primary hover:text-destructive transition-colors p-1"
+                        aria-label="Remover item"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-muted-foreground line-through text-sm">
-                        R$ {(item.price * 1.2).toFixed(2)}
-                      </span>
-                      <span className="text-primary font-bold">R$ {item.price.toFixed(2)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                      <Check className="w-4 h-4 text-green-500" />
-                      Entrega em domicílio
-                    </div>
-                    <div className="flex items-center gap-2 mt-4">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-8 h-8 border border-border rounded flex items-center justify-center hover:bg-muted"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 border border-border rounded flex items-center justify-center hover:bg-muted"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
+
+                    <div className="flex items-center gap-3 mt-4">
+                      <div className="flex items-center bg-muted/30 rounded-lg border border-border p-1">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="w-8 h-8 rounded flex items-center justify-center hover:bg-background transition-colors text-primary"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-8 text-center font-bold text-sm">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 rounded flex items-center justify-center hover:bg-background transition-colors text-primary"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
 
-            {/* Return Old Device */}
-            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <AlertCircle className="w-5 h-5 text-primary" />
-                <span className="text-sm">Deseja devolver seu aparelho antigo?</span>
-                <input
-                  type="checkbox"
-                  checked={returnOldDevice}
-                  onChange={(e) => setReturnOldDevice(e.target.checked)}
-                  className="ml-auto"
-                />
-              </label>
-            </div>
-
-            {/* Shipping Options */}
+            {/* Shipping Calculation */}
             <div className="bg-card border border-border rounded-xl p-6">
-              <p className="font-medium mb-4">Selecione o seu método de envio</p>
-              <div className="space-y-3">
-                {shippingOptions.map((option) => (
-                  <label
-                    key={option.id}
-                    className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedShipping === option.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="shipping"
-                        value={option.id}
-                        checked={selectedShipping === option.id}
-                        onChange={(e) => setSelectedShipping(e.target.value)}
-                        className="accent-primary"
-                      />
-                      <div>
-                        <p className="font-medium">{option.name}</p>
-                        <p className="text-sm text-muted-foreground">{option.description}</p>
-                      </div>
-                    </div>
-                    <span className="font-bold">R$ {option.price.toFixed(2)}</span>
-                  </label>
-                ))}
+              <div className="flex items-center gap-2 mb-4">
+                <Truck className="w-5 h-5 text-primary" />
+                <h3 className="font-medium">Calcular frete e entrega</h3>
               </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="00000-000"
+                  value={cep}
+                  onChange={(e) => setCep(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  className="flex-1 bg-background border border-border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+                <Button
+                  onClick={() => calculateShipping(cep, items)}
+                  disabled={isCalculating || cep.length < 8}
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary/10"
+                >
+                  {isCalculating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Calcular
+                </Button>
+              </div>
+
+              {allShippingOptions.length > 0 && (
+                <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Opções disponíveis:</p>
+                  {allShippingOptions.map((option) => (
+                    <label
+                      key={option.id}
+                      className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${selectedShipping === option.id
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-border hover:border-primary/30'
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="shipping"
+                          value={option.id}
+                          checked={selectedShipping === option.id}
+                          onChange={(e) => setSelectedShipping(e.target.value)}
+                          className="accent-primary"
+                        />
+                        <div className="flex items-center gap-3">
+                          {option.logo && <img src={option.logo} alt={option.name} className="w-8 h-8 object-contain" />}
+                          <div>
+                            <p className="font-medium">{option.name}</p>
+                            <p className="text-[11px] text-muted-foreground">{option.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <span className="font-bold text-primary">R$ {option.price.toFixed(2)}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -171,13 +208,14 @@ const Cart = () => {
                   <span className="text-muted-foreground">Custo de envio</span>
                   <span>R$ {shippingPrice.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Valor do desconto</span>
-                  <span className="text-green-600">(10%)</span>
-                </div>
-                <div className="border-t border-border pt-4 flex justify-between">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold text-xl">R$ {total.toFixed(2)}</span>
+                {/* Discount removed from display */}
+
+                <div className="border-t border-border pt-4 flex justify-between items-end">
+                  <span className="font-bold text-lg">Total</span>
+                  <div className="flex flex-col items-end">
+                    <span className="font-bold text-2xl text-primary">R$ {total.toFixed(2)}</span>
+                    <span className="text-[10px] text-green-600 font-medium">10% OFF no Pix</span>
+                  </div>
                 </div>
               </div>
 
@@ -186,8 +224,8 @@ const Cart = () => {
                 <span className="text-primary font-bold">+72 🏆</span>
               </div>
 
-              <Button 
-                onClick={handleCheckout} 
+              <Button
+                onClick={handleCheckout}
                 className="btn-primary w-full mb-4"
               >
                 Continuar a compra

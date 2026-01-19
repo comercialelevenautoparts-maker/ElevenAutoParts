@@ -8,6 +8,7 @@ export interface CartItem {
   image: string;
   quantity: number;
   size?: string;
+  metadata?: Record<string, any>;
 }
 
 interface CartStore {
@@ -25,15 +26,23 @@ export const useCart = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
-      
+
       addItem: (item) => {
         const { items } = get();
-        const existingItem = items.find((i) => i.id === item.id);
+        const existingItem = items.find((i) =>
+          i.id === item.id &&
+          i.size === item.size &&
+          JSON.stringify(i.metadata) === JSON.stringify(item.metadata)
+        );
 
         if (existingItem) {
           set({
             items: items.map((i) =>
-              i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+              (i.id === item.id &&
+                i.size === item.size &&
+                JSON.stringify(i.metadata) === JSON.stringify(item.metadata))
+                ? { ...i, quantity: i.quantity + 1 }
+                : i
             ),
           });
         } else {
@@ -43,13 +52,19 @@ export const useCart = create<CartStore>()(
 
       addToCart: (item, quantity) => {
         const { items } = get();
-        // Check if item with same id and size already exists
-        const existingItem = items.find((i) => i.id === item.id && i.size === item.size);
+        // Check if item with same id, size and metadata already exists
+        const existingItem = items.find((i) =>
+          i.id === item.id &&
+          i.size === item.size &&
+          JSON.stringify(i.metadata) === JSON.stringify(item.metadata)
+        );
 
         if (existingItem) {
           set({
             items: items.map((i) =>
-              i.id === item.id && i.size === item.size
+              (i.id === item.id &&
+                i.size === item.size &&
+                JSON.stringify(i.metadata) === JSON.stringify(item.metadata))
                 ? { ...i, quantity: i.quantity + quantity }
                 : i
             ),
@@ -58,11 +73,11 @@ export const useCart = create<CartStore>()(
           set({ items: [...items, { ...item, quantity }] });
         }
       },
-      
+
       removeItem: (id) => {
         set({ items: get().items.filter((i) => i.id !== id) });
       },
-      
+
       updateQuantity: (id, quantity) => {
         if (quantity <= 0) {
           get().removeItem(id);
@@ -74,13 +89,13 @@ export const useCart = create<CartStore>()(
           ),
         });
       },
-      
+
       clearCart: () => set({ items: [] }),
-      
+
       getTotalPrice: () => {
         return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
       },
-      
+
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);
       },

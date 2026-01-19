@@ -55,6 +55,7 @@ export const useCartSync = () => {
                                 price: dbItem.preco_unitario,
                                 image: product?.imagem_principal || '',
                                 size: dbItem.tamanho || undefined,
+                                metadata: dbItem.metadata as Record<string, any> || undefined,
                             }, dbItem.quantidade);
                         });
                     }
@@ -104,7 +105,8 @@ export const useCartSync = () => {
                             produto_id: item.id,
                             quantidade: item.quantity,
                             preco_unitario: item.price,
-                            tamanho: item.size || null
+                            tamanho: item.size || null,
+                            metadata: item.metadata || null
                         }));
                         await supabase.from('carrinho_itens').insert(itemsToInsert);
                     }

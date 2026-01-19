@@ -21,6 +21,8 @@ export interface StripeProduct {
     active: boolean;
     created_at: string;
     updated_at: string;
+    produto_tamanhos?: any[];
+    produto_imagens?: any[];
 }
 
 /**
@@ -37,6 +39,13 @@ export function useStripeProducts(category?: string) {
                 .eq('ativo', true)
                 .not('stripe_price_id', 'is', null) // Apenas produtos com Stripe
                 .order('created_at', { ascending: false });
+
+            // Aplicar filtro de categoria se não for 'todos'
+            if (category && category !== 'todos') {
+                // Filtra pelo nome do produto contendo a categoria (Palheta ou Borracha)
+                // Usamos ILIKE para busca case-insensitive
+                query = query.ilike('nome', `%${category}%`);
+            }
 
             const { data, error } = await query;
 
@@ -76,7 +85,11 @@ export function useStripeProduct(productId: string) {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('produtos')
-                .select('*')
+                .select(`
+                    *,
+                    produto_tamanhos(*),
+                    produto_imagens(*)
+                `)
                 .eq('id', productId)
                 .single();
 
@@ -101,6 +114,8 @@ export function useStripeProduct(productId: string) {
                 active: p.ativo,
                 created_at: p.created_at,
                 updated_at: p.updated_at || p.created_at,
+                produto_tamanhos: p.produto_tamanhos,
+                produto_imagens: p.produto_imagens,
             } as StripeProduct;
         },
         enabled: !!productId,
@@ -114,29 +129,13 @@ export function useProductCategories() {
     return useQuery({
         queryKey: ['product-categories'],
         queryFn: async () => {
-            // Usando any para evitar conflito de tipagem
-            const { data, error } = await (supabase
-                .from('produtos')
-                .select('marca')
-                .eq('ativo', true) as any);
-
-            if (error) {
-                console.error('Erro ao buscar categorias:', error);
-                throw error;
-            }
-
-            // Extrair marcas únicas como categorias
-            const categories = [...new Set((data as any[]).map(p => p.marca).filter(Boolean))];
-
             return [
-                { id: 'todos', label: 'TODOS' },
-                ...categories.map(cat => ({
-                    id: cat as string,
-                    label: (cat as string).toUpperCase(),
-                })),
+                { id: 'todos', label: 'Todos' },
+                { id: 'palheta', label: 'Palheta' },
+                { id: 'borracha', label: 'Borracha' },
             ];
         },
-        staleTime: 1000 * 60 * 10,
+        staleTime: 1000 * 60 * 60, // 1 hora já que é estático
     });
 }
 

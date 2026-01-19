@@ -142,6 +142,7 @@ export interface PedidoItem {
   preco_unitario: number;
   subtotal: number;
   tamanho: string | null;
+  metadata?: Record<string, any>;
   produto?: Produto;
 }
 
