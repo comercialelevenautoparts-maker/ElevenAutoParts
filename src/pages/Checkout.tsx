@@ -70,7 +70,6 @@ const Checkout = () => {
   const [step, setStep] = useState(1);
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
-  const [installments, setInstallments] = useState(1); // Número de parcelas selecionadas
   const { items, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -129,19 +128,7 @@ const Checkout = () => {
     }
   }
 
-  const baseTotal = subtotal + shipping - couponDiscount;
-
-  // Interest Logic: 1-3x interest-free, 4x+ logic
-  const INTEREST_RATE = 0.0299; // 2.99% per month
-  const MAX_FREE_INSTALLMENTS = 3;
-
-  const calculateTotalWithInterest = (base: number, n: number) => {
-    if (n <= MAX_FREE_INSTALLMENTS || paymentMethod !== 'credit') return base;
-    // Applying simple interest for the whole period for 4x onwards
-    return base * (1 + (INTEREST_RATE * n));
-  };
-
-  const finalTotal = calculateTotalWithInterest(baseTotal, installments);
+  const finalTotal = subtotal + shipping - couponDiscount;
 
   const steps = [
     { id: 1, name: 'Endereço', icon: MapPin },
@@ -233,8 +220,7 @@ const Checkout = () => {
               customerEmail: user?.email,
               metadata: {
                 userId: user?.id,
-                orderItems: items.length,
-                installments: installments
+                orderItems: items.length
               }
             }),
           });
@@ -353,10 +339,6 @@ const Checkout = () => {
     },
   };
 
-  // NOTE: Without a real clientSecret from a backend, the Elements provider 
-  // will throw an error or not render correctly. 
-  // For demonstration purposes, we are checking if we have a secret (even fake).
-  // In a real app, don't show the payment step until loading=false and secret exists.
   const options = {
     clientSecret,
     appearance,
@@ -697,89 +679,46 @@ const Checkout = () => {
                         </div>
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="paymentMethod"
-                        render={({ field }) => (
-                          <FormItem className="space-y-3">
-                            <FormControl>
-                              <div className="grid grid-cols-2 gap-4 mb-6">
-                                {[
-                                  { id: 'credit', icon: CreditCard, label: 'Crédito' },
-                                  { id: 'debit', icon: Wallet, label: 'Débito' },
-                                  { id: 'pix', icon: QrCode, label: 'Pix' },
-                                  { id: 'boleto', icon: Barcode, label: 'Boleto' }
-                                ].map((option) => (
-                                  <div
-                                    key={option.id}
-                                    onClick={() => {
-                                      field.onChange(option.id);
-                                      // Reset installments when changing payment method
-                                      if (option.id !== 'credit') {
-                                        setInstallments(1);
-                                      }
-                                    }}
-                                    className={`cursor-pointer p-4 border rounded-xl flex flex-col items-center justify-center gap-3 transition-all duration-200 ${field.value === option.id
-                                      ? 'border-primary bg-primary/5 text-primary shadow-inner ring-1 ring-primary'
-                                      : 'border-border hover:bg-muted/50 hover:border-primary/50'
-                                      }`}
-                                  >
-                                    <option.icon className="w-8 h-8" />
-                                    <span className="font-medium">{option.label}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </FormControl>
-                          </FormItem>
+                      {/* STRIPE PAYMENT AREA - Integrated Flow (Stripe handles method selection) */}
+                      <div className="mt-2">
+                        {(() => {
+                          console.log('🎨 Renderizando área de pagamento integrada:', { clientSecret, hasSecret: !!clientSecret });
+                          return null;
+                        })()}
+
+                        {clientSecret && clientSecret.includes('_secret_') ? (
+                          <div className="min-h-[400px]">
+                            <Elements key={clientSecret} stripe={stripePromise} options={options}>
+                              <StripePaymentForm
+                                onSuccess={() => setStep(3)}
+                                onBack={prevStep}
+                                amount={finalTotal}
+                                baseAmount={finalTotal}
+                                paymentMethod={paymentMethod as any}
+                                submitLabel="Confirmar e Pagar"
+                                clientSecret={clientSecret}
+                                billingDetails={{
+                                  name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Cliente",
+                                  email: user?.email || "",
+                                  phone: watch('phone'),
+                                  address: {
+                                    line1: `${watch('street')}, ${watch('number')}`,
+                                    city: watch('city'),
+                                    state: watch('state'),
+                                    postal_code: watch('cep'),
+                                    country: 'BR'
+                                  }
+                                }}
+                              />
+                            </Elements>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in">
+                            <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary/50" />
+                            <p className="text-sm font-medium">Iniciando ambiente de pagamento seguro...</p>
+                          </div>
                         )}
-                      />
-
-
-
-                      {/* STRIPE PAYMENT AREA - Now for all methods */}
-                      {(paymentMethod === 'credit' || paymentMethod === 'debit' || paymentMethod === 'pix' || paymentMethod === 'boleto') && (
-                        <div className="mt-6">
-                          {(() => {
-                            console.log('🎨 Renderizando área de pagamento:', { clientSecret, hasSecret: !!clientSecret, includesSecret: clientSecret?.includes('_secret_') });
-                            return null;
-                          })()}
-                          {clientSecret && clientSecret.includes('_secret_') ? (
-                            <div className="min-h-[300px]">
-                              {/* We wrap this in a try-catch visually by checking secret validity first */}
-                              <Elements key={clientSecret} stripe={stripePromise} options={options}>
-                                <StripePaymentForm
-                                  onSuccess={() => setStep(3)}
-                                  onBack={prevStep}
-                                  amount={finalTotal}
-                                  baseAmount={baseTotal}
-                                  paymentMethod={paymentMethod as 'credit' | 'debit' | 'pix' | 'boleto'}
-                                  installments={installments}
-                                  setInstallments={setInstallments}
-                                  submitLabel={paymentMethod === 'pix' ? "Gerar QR Code Pix" : paymentMethod === 'boleto' ? "Gerar Boleto" : "Confirmar Pagamento"}
-                                  clientSecret={clientSecret}
-                                  billingDetails={{
-                                    name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Cliente",
-                                    email: user?.email || "",
-                                    phone: watch('phone'),
-                                    address: {
-                                      line1: `${watch('street')}, ${watch('number')}`,
-                                      city: watch('city'),
-                                      state: watch('state'),
-                                      postal_code: watch('cep'),
-                                      country: 'BR'
-                                    }
-                                  }}
-                                />
-                              </Elements>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in">
-                              <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
-                              <p>Iniciando pagamento seguro...</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      </div>
                     </div>
                   )
                 }
@@ -825,15 +764,6 @@ const Checkout = () => {
                     <span className="font-bold text-lg">Total</span>
                     <div className="text-right">
                       <span className="font-bold text-2xl text-primary">R$ {finalTotal.toFixed(2)}</span>
-                      {paymentMethod === 'credit' && installments > 1 ? (
-                        <p className="text-xs text-muted-foreground">
-                          ou {installments}x de R$ {(finalTotal / installments).toFixed(2)}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          ou até 12x de R$ {(baseTotal / 12).toFixed(2)}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>

@@ -23,6 +23,7 @@ import PrivacyPolicy from "./pages/Privacy$Policy";
 import CancellationPolicy from "./pages/CancellationPolicy";
 import ReturnPolicy from "./pages/ReturnPolicy";
 import { CartSyncManager } from "./components/CartSyncManager";
+import WhatsAppButton from "./components/common/WhatsAppButton";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <WhatsAppButton />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />

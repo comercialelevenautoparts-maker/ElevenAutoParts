@@ -45,7 +45,7 @@ const Support = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Telefone</p>
-                <p className="font-medium">+55 11 96632-1212</p>
+                <p className="font-medium">+55 11 91732-1666</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
