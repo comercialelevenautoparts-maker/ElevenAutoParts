@@ -41,7 +41,6 @@ Com base nos designs do Figma, implemente as seguintes páginas com seus compone
    - Botão adicionar ao carrinho com seletor de quantidade.
    - Seção de depoimentos: Similar à home.
    - FAQ: Perguntas específicas do produto.
-   - Slider de produtos relacionados.
    - Responsivo: Empilhar imagem/info no mobile.
 
 4. **Página do Carrinho (Cart Page)**:

@@ -18,6 +18,13 @@ app.use(cors());
 app.use('/auth', authRoutes);           // Registro, login, verificação
 app.use('/api/produtos', produtosRoutes); // Listagem e detalhe de produtos
 app.use('/api/carrinho', carrinhoRoutes); // Carrinho do usuário (protegido)
+const freteRoutes = require('./routes/frete');
+app.use('/api/frete', freteRoutes); // Cálculo de frete
+
+// === ROTAS STRIPE ===
+const stripeRoutes = require('./routes/stripe');
+app.use('/api', stripeRoutes); // Ex: /api/create-checkout-session
+
 
 // === HEALTH CHECK ===
 app.get('/', (req, res) => {
@@ -27,7 +34,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/auth/*',
       produtos: '/api/produtos',
-      carrinho: '/api/carrinho'
+      carrinho: '/api/carrinho',
+      stripe_checkout: '/api/create-checkout-session'
     }
   });
 });
