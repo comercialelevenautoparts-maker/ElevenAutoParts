@@ -15,6 +15,7 @@ export const useAddresses = () => {
         .from('enderecos')
         .select('*')
         .eq('user_id', user.id)
+        .neq('tipo', 'excluido') // Filter out "deleted" addresses
         .order('padrao', { ascending: false });
 
       if (error) throw error;
@@ -73,9 +74,11 @@ export const useDeleteAddress = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Soft delete: update tipo to 'excluido' instead of hard delete
+      // This allows the user to "remove" it even if linked to past orders
       const { error } = await supabase
         .from('enderecos')
-        .delete()
+        .update({ tipo: 'excluido', padrao: false } as any)
         .eq('id', id);
 
       if (error) throw error;
@@ -94,9 +97,9 @@ export const fetchAddressByCep = async (cep: string) => {
   try {
     const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
     const data = await response.json();
-    
+
     if (data.erro) return null;
-    
+
     return {
       logradouro: data.logradouro || '',
       bairro: data.bairro || '',

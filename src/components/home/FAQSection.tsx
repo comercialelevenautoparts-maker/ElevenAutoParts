@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Mouse } from 'lucide-react';
 
 const faqCategories = ['TODOS', 'PEDIDOS', 'ENVIO', 'TROCAS/DEVOLUÇÕES', 'SUPORTE'];
 
@@ -70,7 +70,7 @@ const FAQSection = () => {
     : faqItems.filter(item => item.category === activeCategory);
 
   return (
-    <section className="container mx-auto px-4 py-16 mt-24">
+    <section className="container mx-auto px-4 py-12 mt-24">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
           <h2 className="section-title">TEM PERGUNTAS? NÓS TEMOS AS RESPOSTAS.</h2>
@@ -122,6 +122,10 @@ const FAQSection = () => {
             )}
           </div>
         ))}
+      </div>
+
+      <div className="flex justify-center mt-24 animate-bounce">
+        <Mouse className="w-8 h-8 text-[#DFB956]" />
       </div>
     </section>
   );

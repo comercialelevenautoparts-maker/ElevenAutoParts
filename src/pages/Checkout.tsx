@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Check, MapPin, CreditCard, Package, QrCode, Barcode, FileText, Loader2, ShieldCheck, Truck, Wallet } from 'lucide-react';
+import { Check, MapPin, CreditCard, Package, QrCode, Barcode, FileText, Loader2, ShieldCheck, Truck, Wallet, Trash2, Plus, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Stripe Imports
@@ -15,11 +15,11 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAddresses, useCreateAddress } from '@/hooks/useAddresses';
+import { useAddresses, useCreateAddress, useDeleteAddress } from '@/hooks/useAddresses';
 import { useCoupon } from '@/hooks/useCoupons';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useShipping } from '@/hooks/useShipping';
-import { Cupom } from '@/types/database';
+import { Cupom, StatusPedido } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -57,11 +57,12 @@ const checkoutSchema = z.object({
   street: z.string().min(1, 'Rua é obrigatória'),
   number: z.string().min(1, 'Número é obrigatório'),
   complement: z.string().optional(),
+  bairro: z.string().min(1, 'Bairro é obrigatório'),
   city: z.string().min(1, 'Cidade é obrigatória'),
   state: z.string().min(2, 'Estado inválido').max(2, 'Use a sigla (ex: SP)'),
 
   // Step 2: Payment Method Selection
-  paymentMethod: z.enum(['credit', 'debit', 'pix', 'boleto']),
+  paymentMethod: z.enum(['credit', 'debit', 'pix', 'boleto', 'card']),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
@@ -70,6 +71,8 @@ const Checkout = () => {
   const [step, setStep] = useState(1);
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>("");
+  const [isPaymentComplete, setIsPaymentComplete] = useState(false);
+  const [stripeSubmitFn, setStripeSubmitFn] = useState<(() => Promise<void>) | null>(null);
   const { items, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -89,6 +92,7 @@ const Checkout = () => {
       street: '',
       number: '',
       complement: '',
+      bairro: '',
       city: '',
       state: '',
       paymentMethod: 'credit',
@@ -102,23 +106,19 @@ const Checkout = () => {
 
   // Shipping Logic
   const { calculateShipping, isLoading: isCalculatingShipping, options: shippingOptions } = useShipping();
-  // Using ID string to track selection, matching the radio button value
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null);
 
-  // Create standardized options list for rendering
-  const allShippingOptions = shippingOptions.map(opt => ({
+  const allShippingOptions = useMemo(() => shippingOptions.map(opt => ({
     id: String(opt.id),
     name: opt.name,
     description: `Entrega via ${opt.company.name} estimada em ${opt.delivery_time} dias`,
     price: Number(opt.custom_price),
     logo: opt.company.picture
-  }));
+  })), [shippingOptions]);
 
-  // Find the selected option object based on ID
   const selectedShippingOption = allShippingOptions.find((s) => s.id === selectedShippingId);
   const shipping = selectedShippingOption ? selectedShippingOption.price : 0;
 
-  // Calculate Coupon Discount
   let couponDiscount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.tipo === 'percentual') {
@@ -136,7 +136,7 @@ const Checkout = () => {
     { id: 3, name: 'Resumo', icon: Package },
   ];
 
-  const { data: couponData, refetch: validateCoupon } = useCoupon(couponCode);
+  const { refetch: validateCoupon } = useCoupon(couponCode);
 
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
@@ -158,24 +158,21 @@ const Checkout = () => {
     }
   };
 
-  // Address Lookup Logic
   const handleSearchCep = async (cepValue: string) => {
     const cep = cepValue.replace(/\D/g, '');
     if (cep.length === 8) {
       setIsLoadingAddress(true);
       try {
-        // 1. Fetch Address
         const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const data = await response.json();
         if (!data.erro) {
           setValue('street', data.logradouro);
+          setValue('bairro', data.bairro);
           setValue('city', data.localidade);
           setValue('state', data.uf);
           setValue('complement', data.complemento || '');
           toast.success('Endereço encontrado!');
-          trigger(['street', 'city', 'state', 'complement']);
-
-          // 2. Calculate Shipping
+          trigger(['street', 'bairro', 'city', 'state', 'complement']);
           await calculateShipping(cep, items);
         } else {
           toast.error('CEP não encontrado.');
@@ -192,30 +189,22 @@ const Checkout = () => {
     await handleSearchCep(e.target.value);
   };
 
-  // Auto-select first shipping option if available and none selected
   useEffect(() => {
     if (allShippingOptions.length > 0 && !selectedShippingId) {
       setSelectedShippingId(allShippingOptions[0].id);
     }
   }, [allShippingOptions, selectedShippingId]);
 
-  // ... lines omitted ...
-
-
-  // Create PaymentIntent Simulation
-  // Create PaymentIntent via Backend
   useEffect(() => {
     const fetchPaymentIntent = async () => {
-      // Only create intent if we are on payment step and method is credit/debit/pix/boleto
-      if (step === 2 && (paymentMethod === 'credit' || paymentMethod === 'debit' || paymentMethod === 'pix' || paymentMethod === 'boleto') && finalTotal > 0) {
-        console.log('🔄 Iniciando criação de PaymentIntent...', { step, paymentMethod, finalTotal });
+      if (step === 2 && finalTotal > 0 && !clientSecret) {
         try {
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
           const response = await fetch(`${apiUrl}/api/create-payment-intent`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              amount: finalTotal, // Backend handles * 100 conversion
+              amount: finalTotal,
               currency: 'brl',
               customerEmail: user?.email,
               metadata: {
@@ -231,26 +220,26 @@ const Checkout = () => {
           }
 
           const data = await response.json();
-          console.log('✅ PaymentIntent criado:', data.clientSecret);
           setClientSecret(data.clientSecret);
         } catch (error: any) {
           console.error("Error creating payment intent:", error);
           toast.error(error.message || "Erro ao inicializar pagamento seguro.");
         }
-      } else {
-        console.log('⏭️ Pulando criação de PaymentIntent:', { step, paymentMethod, finalTotal });
       }
     };
 
     fetchPaymentIntent();
-  }, [step, paymentMethod, finalTotal, user, items.length]);
+  }, [step, finalTotal, user, items.length, clientSecret]);
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof CheckoutFormValues)[] = [];
     if (step === 1) {
-      fieldsToValidate = ['phone', 'cep', 'street', 'number', 'complement', 'city', 'state'];
+      if (selectedAddressId) {
+        fieldsToValidate = ['phone']; // Only phone is needed if address is selected
+      } else {
+        fieldsToValidate = ['phone', 'cep', 'street', 'number', 'complement', 'bairro', 'city', 'state'];
+      }
 
-      // Validate Shipping Selection
       if (allShippingOptions.length > 0 && !selectedShippingId) {
         toast.error("Selecione uma opção de frete.");
         return;
@@ -267,83 +256,66 @@ const Checkout = () => {
 
   const { mutateAsync: createOrder } = useCreateOrder();
   const { mutateAsync: createAddress } = useCreateAddress();
-  const [isFinishing, setIsFinishing] = useState(false);
+  const { mutateAsync: deleteAddress } = useDeleteAddress();
 
-  // Called when non-stripe payments are finished
-  const handleManualFinish = async () => {
-    setIsFinishing(true);
-    try {
-      let addressId = selectedAddressId;
+  const handleCreateOrder = async (status: string) => {
+    let addressId = selectedAddressId;
 
-      // 1. If it's a new address, create it first
-      if (!addressId) {
-        const newAddr = await createAddress({
-          cep: watch('cep'),
-          logradouro: watch('street'),
-          numero: watch('number'),
-          cidade: watch('city'),
-          uf: watch('state'),
-          bairro: 'Não informado', // Bairro not in form, using placeholder
-          complemento: watch('complement') || '',
-          tipo: 'entrega',
-          padrao: false
-        });
-        addressId = newAddr.id;
-      }
-
-      // 2. Create the order
-      await createOrder({
-        endereco_id: addressId as string,
-        valor_produtos: subtotal,
-        valor_frete: shipping,
-        valor_desconto: couponDiscount,
-        valor_total: finalTotal,
-        forma_pagamento: paymentMethod,
-        itens: items.map(item => ({
-          produto_id: item.id,
-          nome_produto: item.name,
-          quantidade: item.quantity,
-          preco_unitario: item.price,
-          subtotal: item.price * item.quantity,
-          tamanho: item.size,
-          metadata: item.metadata
-        }))
+    if (!addressId) {
+      const newAddr = await createAddress({
+        cep: watch('cep').replace(/\D/g, ''),
+        logradouro: watch('street'),
+        numero: watch('number'),
+        cidade: watch('city'),
+        uf: watch('state'),
+        bairro: watch('bairro') || 'Centro',
+        complemento: watch('complement') || null,
+        tipo: 'entrega',
+        padrao: false
       });
-
-      clearCart();
-      toast.success('Pedido realizado com sucesso!');
-      navigate('/pedidos');
-    } catch (error: any) {
-      toast.error('Erro ao processar pedido: ' + (error.message || 'Erro desconhecido.'));
-    } finally {
-      setIsFinishing(false);
+      addressId = newAddr.id;
     }
+
+    return await createOrder({
+      endereco_id: addressId as string,
+      valor_produtos: subtotal,
+      valor_frete: shipping,
+      valor_desconto: couponDiscount,
+      valor_total: finalTotal,
+      forma_pagamento: paymentMethod,
+      status: status as StatusPedido,
+      itens: items.map(item => ({
+        produto_id: item.id,
+        nome_produto: item.name,
+        quantidade: item.quantity,
+        preco_unitario: Number(item.price),
+        subtotal: Number(item.price * item.quantity),
+        tamanho: item.size || null,
+        metadata: item.metadata || null
+      }))
+    });
   };
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!user) {
       navigate('/login');
     }
   }, [user, navigate]);
 
-  if (!user) {
-    return null;
-  }
-
-  // Stripe Appearance Options
-  const appearance = {
+  const appearance = useMemo(() => ({
     theme: 'stripe' as const,
     variables: {
       colorPrimary: '#0f172a',
     },
-  };
+  }), []);
 
-  const options = {
+  const stripeOptions = useMemo(() => ({
     clientSecret,
     appearance,
     locale: 'pt-BR' as const,
-  };
+  }), [clientSecret, appearance]);
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -366,369 +338,417 @@ const Checkout = () => {
             </div>
           ))}
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2">
             <Form {...form}>
-              <form className="space-y-8">
-
-                {/* STEP 1: Address */}
-                {step === 1 && (
-                  <div className="bg-card border border-border rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-left-4">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b">
-                      <MapPin className="text-primary w-6 h-6" />
-                      <div>
-                        <h2 className="text-xl font-bold">Detalhes da entrega</h2>
-                        <p className="text-muted-foreground text-sm">Onde devemos entregar seu pedido?</p>
+              <form>
+                <div className="space-y-8">
+                  {/* STEP 1: Address */}
+                  {step === 1 && (
+                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-left-4">
+                      <div className="flex items-center gap-3 mb-6 pb-4 border-b">
+                        <MapPin className="text-primary w-6 h-6" />
+                        <div>
+                          <h2 className="text-xl font-bold">Detalhes da entrega</h2>
+                          <p className="text-muted-foreground text-sm">Onde devemos entregar seu pedido?</p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Saved Addresses List */}
-                    {savedAddresses.length > 0 && (
-                      <div className="mb-8">
-                        <h3 className="text-sm font-semibold mb-3">Seus endereços salvos:</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {savedAddresses.map((addr) => (
+                      {/* Saved Addresses List */}
+                      {savedAddresses.length > 0 && (
+                        <div className="mb-8">
+                          <h3 className="text-sm font-semibold mb-3">Seus endereços salvos:</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {savedAddresses.map((addr) => (
+                              <div
+                                key={addr.id}
+                                onClick={() => {
+                                  setSelectedAddressId(addr.id);
+                                  setValue('cep', addr.cep);
+                                  setValue('street', addr.logradouro);
+                                  setValue('number', addr.numero);
+                                  setValue('bairro', addr.bairro);
+                                  setValue('city', addr.cidade);
+                                  setValue('state', addr.uf);
+                                  calculateShipping(addr.cep, items);
+                                  trigger(['phone']); // Validates phone when selecting
+                                }}
+                                className={`group relative p-4 border rounded-xl cursor-pointer transition-all duration-300 ${selectedAddressId === addr.id
+                                  ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-md'
+                                  : 'hover:border-primary/50 hover:bg-muted/30'
+                                  }`}
+                              >
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-[10px] uppercase px-2 py-0.5 bg-muted rounded text-muted-foreground">{addr.tipo}</span>
+                                    {addr.padrao && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Padrão</span>}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if (confirm('Tem certeza que deseja excluir este endereço?')) {
+                                        try {
+                                          await deleteAddress(addr.id);
+                                          if (selectedAddressId === addr.id) {
+                                            setSelectedAddressId(null);
+                                          }
+                                          toast.success('Endereço removido');
+                                        } catch (error: any) {
+                                          console.error('Erro ao deletar endereço:', error);
+                                          toast.error('Não foi possível excluir o endereço no momento.');
+                                        }
+                                      }
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-100 hover:text-red-600 rounded-full transition-all text-muted-foreground"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <p className="text-sm font-bold text-foreground">{addr.logradouro}, {addr.numero}</p>
+                                <p className="text-xs text-muted-foreground">{addr.bairro} - {addr.cidade}/{addr.uf}</p>
+
+                                {selectedAddressId === addr.id && (
+                                  <div className="absolute top-2 right-2 md:top-4 md:right-4">
+                                    <div className="bg-primary text-primary-foreground rounded-full p-1">
+                                      <Check className="w-3 h-3" />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                             <div
-                              key={addr.id}
                               onClick={() => {
-                                setSelectedAddressId(addr.id);
-                                setValue('cep', addr.cep);
-                                setValue('street', addr.logradouro);
-                                setValue('number', addr.numero);
-                                setValue('city', addr.cidade);
-                                setValue('state', addr.uf);
-                                calculateShipping(addr.cep, items); // Auto calculate for saved address
-                                trigger(['cep', 'street', 'number', 'city', 'state']);
+                                setSelectedAddressId(null);
+                                form.reset({
+                                  ...form.getValues(),
+                                  cep: '', street: '', number: '', bairro: '', city: '', state: ''
+                                });
+                                setSelectedShippingId(null);
                               }}
-                              className={`p-4 border rounded-lg cursor-pointer transition-all ${selectedAddressId === addr.id
-                                ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                : 'hover:border-primary/50'
+                              className={`p-4 border-2 border-dashed rounded-xl cursor-pointer flex flex-col items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary transition-all duration-300 min-h-[110px] ${!selectedAddressId ? 'border-primary bg-primary/5 shadow-sm' : 'border-muted'
                                 }`}
                             >
-                              <div className="flex justify-between items-start">
-                                <span className="font-bold text-xs uppercase text-muted-foreground">{addr.tipo}</span>
-                                {addr.padrao && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Padrão</span>}
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10">
+                                <Plus className="w-5 h-5 text-muted-foreground" />
                               </div>
-                              <p className="text-sm font-medium mt-1">{addr.logradouro}, {addr.numero}</p>
-                              <p className="text-xs text-muted-foreground">{addr.cidade} - {addr.uf}</p>
+                              <span className="text-sm font-bold text-muted-foreground">Novo endereço</span>
                             </div>
-                          ))}
-                          <div
-                            onClick={() => {
-                              setSelectedAddressId(null);
-                              form.reset({
-                                ...form.getValues(),
-                                cep: '', street: '', number: '', city: '', state: ''
-                              });
-                              setSelectedShippingId(null);
-                            }}
-                            className={`p-4 border border-dashed rounded-lg cursor-pointer flex items-center justify-center hover:bg-muted/50 transition-all ${!selectedAddressId ? 'border-primary bg-primary/5' : ''
-                              }`}
-                          >
-                            <span className="text-sm font-medium">+ Novo endereço</span>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Telefone / WhatsApp</FormLabel>
-                            <FormControl>
-                              <Input placeholder="(11) 99999-9999" {...field} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-4">
                         <FormField
                           control={form.control}
-                          name="cep"
+                          name="phone"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>CEP</FormLabel>
+                              <FormLabel>Telefone / WhatsApp</FormLabel>
                               <FormControl>
-                                <div className="flex gap-2">
-                                  <div className="relative flex-1">
-                                    <Input
-                                      placeholder="00000-000"
-                                      {...field}
-                                      onChange={(e) => {
-                                        field.onChange(formatCEP(e.target.value));
-                                        if (selectedAddressId) setSelectedAddressId(null);
-                                      }}
-                                      onBlur={handleBlurCep}
-                                    />
-                                  </div>
-                                </div>
+                                <Input placeholder="(11) 99999-9999" {...field} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        <div className="md:col-span-2">
-                          <FormField
-                            control={form.control}
-                            name="street"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Rua</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Nome da rua" {...field} disabled={isLoadingAddress} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="number"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Número</FormLabel>
-                              <FormControl>
-                                <Input placeholder="123" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="complement"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Complemento (opcional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Apto 101, Bloco A" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Cidade</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Cidade" {...field} disabled={isLoadingAddress} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Estado</FormLabel>
-                            <FormControl>
-                              <Input placeholder="SP" maxLength={2} className="uppercase" {...field} disabled={isLoadingAddress} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div >
-
-
-                    {allShippingOptions.length > 0 && (
-                      <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-4">
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Opções disponíveis:</p>
-                        {allShippingOptions.map((option) => (
-                          <label
-                            key={option.id}
-                            className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${selectedShippingId === option.id
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-border hover:border-primary/30'
-                              }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="radio"
-                                name="shipping"
-                                value={option.id}
-                                checked={selectedShippingId === option.id}
-                                onChange={(e) => setSelectedShippingId(e.target.value)}
-                                className="accent-primary"
+                        {!selectedAddressId && (
+                          <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="cep"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>CEP</FormLabel>
+                                    <FormControl>
+                                      <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                          <Input
+                                            placeholder="00000-000"
+                                            {...field}
+                                            onChange={(e) => {
+                                              field.onChange(formatCEP(e.target.value));
+                                              if (selectedAddressId) setSelectedAddressId(null);
+                                            }}
+                                            onBlur={handleBlurCep}
+                                          />
+                                        </div>
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
                               />
-                              <div className="flex items-center gap-3">
-                                {option.logo && <img src={option.logo} alt={option.name} className="w-8 h-8 object-contain" />}
-                                <div>
-                                  <p className="font-medium">{option.name}</p>
-                                  <p className="text-[11px] text-muted-foreground">{option.description}</p>
-                                </div>
+                              <div className="md:col-span-2">
+                                <FormField
+                                  control={form.control}
+                                  name="street"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Rua</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="Nome da rua" {...field} disabled={isLoadingAddress} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
                               </div>
                             </div>
-                            <span className="font-bold text-primary">R$ {option.price.toFixed(2)}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                    <div className="hidden md:block"></div>
-                  </div >
-                )}
 
-                {/* STEP 2: Summary -> New flow: Address, then Summary, then Payment */}
-                {
-                  step === 3 && (
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-right-4">
-                      <div className="flex items-center gap-3 mb-6 pb-4 border-b">
-                        <Package className="text-primary w-6 h-6" />
-                        <div>
-                          <h2 className="text-xl font-bold">Resumo do pedido</h2>
-                          <p className="text-muted-foreground text-sm">Confira os itens antes de finalizar</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="number"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Número</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="123" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="complement"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Complemento (opcional)</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Apto 101, Bloco A" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                              <div className="md:col-span-2">
+                                <FormField
+                                  control={form.control}
+                                  name="bairro"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <h3 className="section-subtitle mb-2">Bairro</h3>
+                                      <FormControl>
+                                        <Input placeholder="Seu bairro" {...field} disabled={isLoadingAddress} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <FormField
+                                  control={form.control}
+                                  name="city"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Cidade</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="Cidade" {...field} disabled={isLoadingAddress} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="md:col-span-1">
+                                <FormField
+                                  control={form.control}
+                                  name="state"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Estado</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="SP" maxLength={2} className="uppercase" {...field} disabled={isLoadingAddress} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {allShippingOptions.length > 0 && (
+                        <div className="mt-6 space-y-3 animate-in fade-in slide-in-from-top-4">
+                          <p className="text-sm font-medium text-muted-foreground mb-2">Opções disponíveis:</p>
+                          {allShippingOptions.map((option) => (
+                            <label
+                              key={option.id}
+                              className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all ${selectedShippingId === option.id
+                                ? 'border-primary bg-primary/5 shadow-sm'
+                                : 'border-border hover:border-primary/30'
+                                }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <input
+                                  type="radio"
+                                  name="shipping"
+                                  value={option.id}
+                                  checked={selectedShippingId === option.id}
+                                  onChange={(e) => setSelectedShippingId(e.target.value)}
+                                  className="accent-primary"
+                                />
+                                <div className="flex items-center gap-3">
+                                  {option.logo && <img src={option.logo} alt={option.name} className="w-8 h-8 object-contain" />}
+                                  <div>
+                                    <p className="font-medium">{option.name}</p>
+                                    <p className="text-[11px] text-muted-foreground">{option.description}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="font-bold text-primary">R$ {option.price.toFixed(2)}</span>
+                            </label>
+                          ))}
                         </div>
-                      </div>
+                      )}
+                    </div>
+                  )}
 
-                      <div className="space-y-4 mb-6">
-                        {items.map((item) => (
-                          <div key={item.id} className="flex gap-4 p-4 bg-muted/30 rounded-lg border border-border/50 items-start">
-                            <img src={item.image} alt={item.name} className="w-20 h-20 object-contain rounded bg-white p-2 border" />
-                            <div className="flex-1 space-y-1">
-                              <h4 className="font-bold text-base text-foreground">{item.name}</h4>
+                  {/* STEPS 2 & 3: Payment and Summary */}
+                  {(step === 2 || step === 3) && (
+                    <div className="space-y-4">
+                      {clientSecret && clientSecret.includes('_secret_') ? (
+                        <Elements key="stable-stripe-provider" stripe={stripePromise} options={stripeOptions}>
+                          <div className={step === 3 ? 'block' : 'hidden'}>
+                            <div className="bg-card border border-border rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-right-4">
+                              <div className="flex items-center gap-3 mb-6 pb-4 border-b">
+                                <Package className="text-primary w-6 h-6" />
+                                <div>
+                                  <h2 className="text-xl font-bold">Resumo do pedido</h2>
+                                  <p className="text-muted-foreground text-sm">Confira os itens antes de finalizar</p>
+                                </div>
+                              </div>
 
-                              {/* Product Metadata/Compatibility Display */}
-                              {(item.metadata?.veiculo && typeof item.metadata.veiculo === 'object') && (
-                                <div className="text-xs text-muted-foreground space-y-0.5 mt-4">
-                                  <p className="font-medium text-foreground">Compatível com: {item.metadata.veiculo.marca} {item.metadata.veiculo.modelo} ({item.metadata.veiculo.ano})</p>
-                                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-4">
-                                    {item.metadata.veiculo.medidas && (
-                                      <span className="flex items-center gap-1 bg-background px-1.5 py-0.5 rounded border">
-                                        Medidas: {item.metadata.veiculo.medidas.motorista}" / {item.metadata.veiculo.medidas.passageiro}"
-                                      </span>
-                                    )}
-                                    {item.metadata.veiculo.conector && (
-                                      <span className="flex items-center gap-1 bg-background px-1.5 py-0.5 rounded border">
-                                        Conector: {item.metadata.veiculo.conector}
-                                      </span>
-                                    )}
+                              <div className="space-y-4 mb-6">
+                                {items.map((item) => (
+                                  <div key={item.id} className="flex gap-4 p-4 bg-muted/30 rounded-lg border border-border/50 items-start">
+                                    <img src={item.image} alt={item.name} className="w-20 h-20 object-contain rounded bg-white p-2 border" />
+                                    <div className="flex-1 space-y-1">
+                                      <h4 className="font-bold text-base text-foreground">{item.name}</h4>
+                                      {item.metadata?.veiculo && (
+                                        <div className="text-xs space-y-1 mt-2">
+                                          <div className="inline-block bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                                            Para: {item.metadata.veiculo.marca} {item.metadata.veiculo.modelo} ({item.metadata.veiculo.ano})
+                                          </div>
+                                          <div className="text-muted-foreground flex flex-wrap gap-2 items-center">
+                                            {item.metadata.veiculo.medidas && (
+                                              <span className="flex items-center gap-1">
+                                                Medidas: {item.metadata.veiculo.medidas.motorista}" / {item.metadata.veiculo.medidas.passageiro}"
+                                              </span>
+                                            )}
+                                            {item.metadata.veiculo.conector && (
+                                              <>
+                                                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                                                <span className="flex items-center gap-1">
+                                                  Conector: {item.metadata.veiculo.conector}
+                                                </span>
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                      <p className="text-sm text-foreground mt-2">Quantidade: <span className="font-medium">{item.quantity}</span></p>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                      <span className="font-bold text-lg">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="bg-muted/40 p-4 rounded-lg space-y-4 text-sm mb-6">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Endereço:</span>
+                                  <span className="font-medium text-right">
+                                    {watch('street')}, {watch('number')}{watch('complement') ? ` - ${watch('complement')}` : ''} {"\n"}
+                                    {watch('bairro')} - {watch('city')}/{watch('state')}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between border-t border-border pt-2">
+                                  <span className="text-muted-foreground">Pagamento:</span>
+                                  <span className="font-medium text-right capitalize">
+                                    {paymentMethod === 'card' ? 'Cartão' : paymentMethod}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex justify-start">
+                                <Button type="button" variant="outline" onClick={prevStep} className="w-40 border-primary text-primary hover:bg-primary/5">
+                                  Voltar
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className={step === 2 ? 'block' : ''}>
+                            <div className={step === 2 ? 'bg-card border border-border rounded-xl p-6 shadow-sm' : ''}>
+                              {step === 2 && (
+                                <div className="flex items-center gap-3 mb-6 pb-4 border-b">
+                                  <CreditCard className="text-primary w-6 h-6" />
+                                  <div>
+                                    <h2 className="text-xl font-bold">Pagamento</h2>
+                                    <p className="text-muted-foreground text-sm">Escolha como deseja pagar</p>
                                   </div>
                                 </div>
                               )}
 
-                              <p className="text-sm text-foreground mt-2">Quantidade: <span className="font-medium">{item.quantity}</span></p>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <span className="font-bold text-lg">R$ {(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="bg-muted/40 p-4 rounded-lg space-y-4 text-sm mb-6">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Endereço:</span>
-                          <span className="font-medium text-right">
-                            {watch('street')}, {watch('number')}
-                            {watch('complement') ? ` - ${watch('complement')}` : ''}
-                            {"\n"}-{"\n"}
-                            {watch('city')}/{watch('state')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between border-t border-border pt-2">
-                          <span className="text-muted-foreground">Pagamento:</span>
-                          <span className="font-medium text-right capitalize">
-                            {paymentMethod === 'credit' && 'Cartão de Crédito'}
-                            {paymentMethod === 'debit' && 'Cartão de Débito'}
-                            {paymentMethod === 'pix' && 'Pix'}
-                            {paymentMethod === 'boleto' && 'Boleto Bancário'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4 mt-6">
-                        <Button type="button" variant="outline" onClick={prevStep}>Voltar</Button>
-                        <Button type="button" onClick={handleManualFinish} className="btn-primary flex-1" disabled={isFinishing}>
-                          {isFinishing ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processando...
-                            </>
-                          ) : 'Finalizar Pedido'}
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                }
-
-                {/* STEP 3: Payment */}
-                {
-                  step === 2 && (
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-right-4">
-                      <div className="flex items-center gap-3 mb-6 pb-4 border-b">
-                        <CreditCard className="text-primary w-6 h-6" />
-                        <div>
-                          <h2 className="text-xl font-bold">Método de pagamento</h2>
-                          <p className="text-muted-foreground text-sm">Ambiente criptografado e seguro</p>
-                        </div>
-                      </div>
-
-                      {/* STRIPE PAYMENT AREA - Integrated Flow (Stripe handles method selection) */}
-                      <div className="mt-2">
-                        {(() => {
-                          console.log('🎨 Renderizando área de pagamento integrada:', { clientSecret, hasSecret: !!clientSecret });
-                          return null;
-                        })()}
-
-                        {clientSecret && clientSecret.includes('_secret_') ? (
-                          <div className="min-h-[400px]">
-                            <Elements key={clientSecret} stripe={stripePromise} options={options}>
                               <StripePaymentForm
-                                onSuccess={() => setStep(3)}
+                                isSummaryStep={step === 3}
+                                onNextStep={() => setStep(3)}
+                                onSuccess={() => {
+                                  clearCart();
+                                  navigate('/pedidos');
+                                }}
                                 onBack={prevStep}
                                 amount={finalTotal}
                                 baseAmount={finalTotal}
                                 paymentMethod={paymentMethod as any}
-                                submitLabel="Confirmar e Pagar"
                                 clientSecret={clientSecret}
+                                onCreateOrder={handleCreateOrder}
+                                onPaymentMethodChange={(type) => setValue('paymentMethod', type as any)}
+                                onCompleteChange={(complete) => setIsPaymentComplete(complete)}
+                                onRegisterSubmit={(fn) => setStripeSubmitFn(() => fn)}
                                 billingDetails={{
                                   name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Cliente",
                                   email: user?.email || "",
-                                  phone: watch('phone'),
+                                  phone: watch('phone') || "",
                                   address: {
                                     line1: `${watch('street')}, ${watch('number')}`,
                                     city: watch('city'),
                                     state: watch('state'),
-                                    postal_code: watch('cep'),
+                                    postal_code: watch('cep').replace(/\D/g, ''),
                                     country: 'BR'
                                   }
                                 }}
                               />
-                            </Elements>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-in fade-in">
-                            <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary/50" />
-                            <p className="text-sm font-medium">Iniciando ambiente de pagamento seguro...</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                }
-              </form >
-            </Form >
-          </div >
 
-          {/* Summary Sidebar */}
-          < div className="lg:col-span-1" >
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm sticky top-24">
+                            </div>
+                          </div>
+                        </Elements>
+                      ) : (
+                        <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col items-center justify-center py-12 text-muted-foreground">
+                          <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary/50" />
+                          <p className="text-sm font-medium">Iniciando ambiente seguro...</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </form>
+            </Form>
+          </div>
+
+          <div className="lg:col-span-1">
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h3 className="font-bold text-lg mb-4">Valores</h3>
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between text-muted-foreground"><span>Subtotal ({items.length} itens)</span><span>R$ {subtotal.toFixed(2)}</span></div>
@@ -779,12 +799,46 @@ const Checkout = () => {
                   Continuar para Pagamento
                 </Button>
               )}
+
+              {step === 2 && (
+                <div className="space-y-3 mt-6">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!isPaymentComplete) {
+                        toast.error("Por favor, preencha todos os campos de pagamento.");
+                        return;
+                      }
+                      setStep(3);
+                    }}
+                    className="btn-primary w-full"
+                  >
+                    Revisar pedido
+                  </Button>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="mt-6">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (stripeSubmitFn) {
+                        stripeSubmitFn();
+                      }
+                    }}
+                    className="btn-primary w-full"
+                  >
+                    Finalizar compra
+                  </Button>
+                </div>
+              )}
             </div>
-          </div >
-        </div >
-      </main >
+          </div>
+        </div>
+      </main>
       <Footer />
-    </div >
+    </div>
   );
 };
 

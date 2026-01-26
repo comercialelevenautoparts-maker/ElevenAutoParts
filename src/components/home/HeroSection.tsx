@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { Mouse } from 'lucide-react';
 import horizontalVideo from '@/assets/videos/eleven-horizontal.mov';
 import verticalVideo from '@/assets/videos/eleven-vertical.mov';
 
@@ -15,17 +16,17 @@ const HeroSection = () => {
         {/* Left Content */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
               ELEVE SEU CARRO COM <span className="text-primary"><br />ELEVEN AUTO PARTS</span>
             </h1>
-            <p className="mt-4 text-muted-foreground max-w-lg">
+            <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-lg">
               Explore o mundo das peças automotivas na AutoParts, onde qualidade encontra preço justo. Descubra as melhores palhetas para limpeza, acessórios e peças de reposição com promoções exclusivas para manter seu veículo em perfeito estado.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-2 text-sm md:text-base"
               onClick={handleBuyNow}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -33,7 +34,7 @@ const HeroSection = () => {
               </svg>
               Comprar agora
             </button>
-            <button className="nav-link" onClick={() => navigate('/suporte')}>
+            <button className="nav-link text-sm md:text-base" onClick={() => navigate('/suporte')}>
               Fale conosco
             </button>
           </div>
@@ -41,20 +42,20 @@ const HeroSection = () => {
           {/* Stats */}
           <div className="grid grid-cols-2 gap-6 pt-6 border-t border-border">
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-foreground">MAIS DE 1000</div>
-              <p className="text-sm text-muted-foreground">Clientes que já foram atendidos</p>
+              <div className="text-xl md:text-3xl font-bold text-foreground">MAIS DE 1000</div>
+              <p className="text-xs md:text-sm text-muted-foreground">Clientes que já foram atendidos</p>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-foreground">99%</div>
-              <p className="text-sm text-muted-foreground">Taxa de Satisfação do Cliente</p>
+              <div className="text-xl md:text-3xl font-bold text-foreground">99%</div>
+              <p className="text-xs md:text-sm text-muted-foreground">Taxa de Satisfação do Cliente</p>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-foreground">24/7</div>
-              <p className="text-sm text-muted-foreground">Conveniência nas compras</p>
+              <div className="text-xl md:text-3xl font-bold text-foreground">24/7</div>
+              <p className="text-xs md:text-sm text-muted-foreground">Conveniência nas compras</p>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-foreground">30 DIAS</div>
-              <p className="text-sm text-muted-foreground">Devolução sem complicações</p>
+              <div className="text-xl md:text-3xl font-bold text-foreground">30 DIAS</div>
+              <p className="text-xs md:text-sm text-muted-foreground">Devolução sem complicações</p>
             </div>
           </div>
         </div>
@@ -91,7 +92,11 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
-    </section>
+
+      <div className="flex justify-center mt-24 animate-bounce">
+        <Mouse className="w-8 h-8 text-[#DFB956]" />
+      </div>
+    </section >
   );
 };
 

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Pedido, PedidoItem } from '@/types/database';
+import { Pedido, PedidoItem, StatusPedido } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useOrders = () => {
@@ -65,6 +65,7 @@ export const useCreateOrder = () => {
       valor_desconto: number;
       valor_total: number;
       forma_pagamento: string;
+      status?: StatusPedido;
       itens: {
         produto_id: string;
         nome_produto: string;
@@ -92,6 +93,7 @@ export const useCreateOrder = () => {
           valor_desconto: orderData.valor_desconto,
           valor_total: orderData.valor_total,
           forma_pagamento: orderData.forma_pagamento,
+          status: orderData.status || 'pendente',
         })
         .select()
         .single();

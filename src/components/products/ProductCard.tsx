@@ -112,23 +112,23 @@ const ProductCard = ({
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-3 md:p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
-            <h3 className="font-medium text-foreground line-clamp-1">{name}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-1">{description}</p>
+            <h3 className="font-medium text-sm md:text-base text-foreground line-clamp-1">{name}</h3>
+            <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">{description}</p>
             {category && (
-              <span className="inline-block mt-1 text-xs text-primary font-medium uppercase">
+              <span className="inline-block mt-1 text-[10px] md:text-xs text-primary font-medium uppercase">
                 {category}
               </span>
             )}
           </div>
           <div className="text-right">
-            <span className="font-bold text-foreground whitespace-nowrap block">
+            <span className="font-bold text-sm md:text-base text-foreground whitespace-nowrap block">
               {formatPrice(price)}
             </span>
             {stockQuantity > 0 && stockQuantity <= 10 && (
-              <span className="text-xs text-orange-500">
+              <span className="text-[10px] md:text-xs text-orange-500">
                 Apenas {stockQuantity} em estoque
               </span>
             )}

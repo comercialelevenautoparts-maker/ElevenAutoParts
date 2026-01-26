@@ -42,9 +42,14 @@ export function useStripeProducts(category?: string) {
 
             // Aplicar filtro de categoria se não for 'todos'
             if (category && category !== 'todos') {
-                // Filtra pelo nome do produto contendo a categoria (Palheta ou Borracha)
-                // Usamos ILIKE para busca case-insensitive
-                query = query.ilike('nome', `%${category}%`);
+                if (category === 'borracha') {
+                    // Para borracha, incluir também "refil"
+                    query = query.or('nome.ilike.%borracha%,nome.ilike.%refil%');
+                } else {
+                    // Filtra pelo nome do produto contendo a categoria (Palheta)
+                    // Usamos ILIKE para busca case-insensitive
+                    query = query.ilike('nome', `%${category}%`);
+                }
             }
 
             const { data, error } = await query;

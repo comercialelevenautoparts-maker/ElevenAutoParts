@@ -107,7 +107,7 @@ const Header = () => {
               className="flex items-center"
               onClick={scrollToTop}
             >
-              <img src={logoImage} alt="Eleven Auto Parts" className="h-12 md:h-14 object-contain" />
+              <img src={logoImage} alt="Eleven Auto Parts" className="h-10 md:h-14 object-contain" />
             </Link>
 
             {/* Right Icons */}
@@ -259,7 +259,7 @@ const Header = () => {
 
         {/* Cart Dropdown */}
         {isCartOpen && (
-          <div className="absolute right-4 top-full mt-2 w-80 bg-card border border-border rounded-lg shadow-elevated z-50 animate-slide-in-right">
+          <div className="absolute right-0 sm:right-4 top-full mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[320px] bg-card border border-border rounded-lg shadow-elevated z-50 animate-slide-in-right mx-4 sm:mx-0">
             <div className="p-4 border-b border-border">
               <h3 className="font-semibold">Carrinho de compras ({getTotalItems()})</h3>
             </div>
@@ -295,7 +295,7 @@ const Header = () => {
                   className="btn-primary w-full flex items-center justify-center gap-2 text-sm"
                   onClick={() => setIsCartOpen(false)}
                 >
-                  FINALIZAR COMPRA AGORA
+                  FINALIZAR COMPRA
                   <ChevronRight className="w-4 h-4" />
                 </Link>
                 <button

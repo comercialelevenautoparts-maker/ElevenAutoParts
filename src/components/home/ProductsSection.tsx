@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Mouse } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProductCard from '@/components/products/ProductCard';
 import { useStripeProducts, useProductCategories } from '@/hooks/useStripeProducts';
@@ -65,7 +65,7 @@ const ProductsSection = () => {
   }
 
   return (
-    <section className="container mx-auto px-4 py-12 mt-24">
+    <section className="container mx-auto px-4 py-12 mt-4">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-2">

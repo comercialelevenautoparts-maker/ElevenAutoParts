@@ -29,7 +29,7 @@ const steps = [
 
 const SeamlessExperience = () => {
   return (
-    <section className="container mx-auto px-4 py-16 mt-24">
+    <section className="container mx-auto px-4 py-12">
       <div className="mb-12">
         <div className="flex items-center gap-2 mb-2">
           <h2 className="section-title">SEAMLESS EXPERIENCE.</h2>

@@ -1,4 +1,4 @@
-import { Shield, Headphones, Layers, Truck, Globe, Leaf } from 'lucide-react';
+import { Shield, Headphones, Layers, Truck, Globe, Leaf, Mouse } from 'lucide-react';
 import experienceBg from '@/assets/experience-bg.jpg';
 
 const features = [
@@ -36,7 +36,7 @@ const features = [
 
 const ExperienceSection = () => {
   return (
-    <section className="py-16 bg-muted mt-24">
+    <section className="container mx-auto px-4 py-12 mt-24">
       <div className="container mx-auto px-4">
         {/* Header with image */}
         <div className="flex flex-col lg:flex-row items-center gap-8 mb-12">
@@ -49,10 +49,10 @@ const ExperienceSection = () => {
           </div>
           <div className="lg:w-2/3">
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="section-title">ELEVEN AUTO PARTS EXPERIENCE</h2>
+              <h2 className="text-2xl md:text-4xl font-medium text-[#DFB956]">ELEVEN AUTO PARTS EXPERIENCE</h2>
               <span className="section-subtitle">SOBRE NÓS</span>
             </div>
-            <p className="text-muted-foreground max-w-2xl">
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
               Na Eleven Auto Parts, somos movidos pela paixão por automóveis e pelo compromisso com nosso atendimento,
               nossa jornada só está completa quando você é atendido bem. Com uma curadoria de peças
               automotivas de alta qualidade e um atendimento que coloca você no centro, trazemos a experiência
@@ -81,6 +81,10 @@ const ExperienceSection = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="flex justify-center mt-24 animate-bounce">
+        <Mouse className="w-8 h-8 text-[#DFB956]" />
       </div>
     </section>
   );

@@ -63,27 +63,25 @@ const Footer = () => {
 
   const footerLinks = {
     inicio: [
-      { label: 'Destaques', href: '#' },
-      { label: 'Promoções', href: '#' },
-      { label: 'Novos Produtos', href: '#' },
-      { label: 'FAQ', href: '#' },
-    ],
-    minha_conta: [
-      { label: 'Meu Perfil', href: '#' },
-      { label: 'Meus Pedidos', href: '#' },
-      { label: 'Carrinho', href: '#' },
-      { label: 'Favoritos', href: '#' },
+      { label: 'Início', href: '/' },
+      { label: 'Produtos', href: '/produtos' },
     ],
     produtos: [
-      { label: 'Kit de Palhetas', href: '#' },
-      { label: 'Acessórios', href: '#' },
-      { label: 'Todos os Produtos', href: '#' },
+      { label: 'Palheta', href: '/produtos' },
+      { label: 'Borracha', href: '/produtos' },
+    ],
+    minha_conta: [
+      { label: 'Informações pessoais', href: '/perfil' },
+      { label: 'Meus pedidos', href: '/pedidos' },
+      { label: 'Minha lista de desejos', href: '/favoritos' },
+      { label: 'Indique e ganhe', href: '/indique-e-ganhe' },
+      { label: 'Rastreamento', href: '/rastreio' },
     ],
     suporte: [
-      { label: 'Rastreamento', href: '/rastreio' },
-      { label: 'Trocas/Devoluções', href: '/return-policy' },
-      { label: 'Cancelamento', href: '/cancellation-policy' },
-      { label: 'Contato', href: '/suporte' },
+      { label: 'Termos e condições', href: '/terms$conditions' },
+      { label: 'Política de privacidade', href: '/privacy$policy' },
+      { label: 'Política de devolução', href: '/return-policy' },
+      { label: 'Política de cancelamento', href: '/cancellation-policy' },
     ],
   };
 
@@ -122,14 +120,14 @@ const Footer = () => {
 
           {/* Links */}
           <div>
-            <h4 className="font-semibold mb-4">Início</h4>
+            <h4 className="font-semibold mb-4 text-base md:text-lg">Início</h4>
             <ul className="space-y-2">
               {footerLinks.inicio.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -139,31 +137,14 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Minha Conta</h4>
-            <ul className="space-y-2">
-              {footerLinks.minha_conta.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.href}
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Produtos</h4>
+            <h4 className="font-semibold mb-4 text-base md:text-lg">Produtos</h4>
             <ul className="space-y-2">
               {footerLinks.produtos.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -173,14 +154,31 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Suporte</h4>
+            <h4 className="font-semibold mb-4 text-base md:text-lg">Minha Conta</h4>
+            <ul className="space-y-2">
+              {footerLinks.minha_conta.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4 text-base md:text-lg">Suporte</h4>
             <ul className="space-y-2">
               {footerLinks.suporte.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -192,7 +190,7 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-muted-foreground justify-center md:justify-start">
             <Link to="/terms$conditions" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Termos &amp; Condições</Link>
             <span>|</span>
             <Link to="/privacy$policy" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Política de Privacidade</Link>
@@ -203,19 +201,19 @@ const Footer = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90">
-              <FontAwesomeIcon icon={faFacebook} className="w-4 h-4" />
+            <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8 md:w-10 md:h-10">
+              <FontAwesomeIcon icon={faFacebook} className="w-3 h-3 md:w-4 md:h-4" />
             </a>
-            <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90">
-              <FontAwesomeIcon icon={faInstagram} className="w-4 h-4" />
+            <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8 md:w-10 md:h-10">
+              <FontAwesomeIcon icon={faInstagram} className="w-3 h-3 md:w-4 md:h-4" />
             </a>
-            <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90">
-              <FontAwesomeIcon icon={faLinkedin} className="w-4 h-4" />
+            <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8 md:w-10 md:h-10">
+              <FontAwesomeIcon icon={faLinkedin} className="w-3 h-3 md:w-4 md:h-4" />
             </a>
           </div>
 
-          <div className="flex flex-col items-center md:items-end gap-1">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
+            <p className="text-xs md:text-sm text-muted-foreground">
               © 2025 Eleven Auto Parts. Todos os direitos reservados.
             </p>
             <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest">
