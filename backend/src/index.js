@@ -6,6 +6,7 @@ const express = require('express');
 const authRoutes = require('./routes/auth');
 const produtosRoutes = require('./routes/produtos');
 const carrinhoRoutes = require('./routes/carrinho');
+const reviewsRoutes = require('./routes/reviews');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.use('/api/frete', freteRoutes); // Cálculo de frete
 // === ROTAS STRIPE ===
 const stripeRoutes = require('./routes/stripe');
 app.use('/api', stripeRoutes); // Ex: /api/create-checkout-session
+app.use('/api/reviews', reviewsRoutes); // Sincronização de depoimentos do Google
 
 
 // === HEALTH CHECK ===
