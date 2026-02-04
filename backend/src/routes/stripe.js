@@ -9,6 +9,31 @@ const supabase = createClient(
     process.env.SUPABASE_KEY
 );
 
+router.post('/confirm-payment', async (req, res) => {
+    const { paymentIntentId, paymentMethodId } = req.body;
+
+    try {
+        // Primeiro recuperamos o estado atual do intent
+        let paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        console.log(`[Stripe] PI ${paymentIntentId} status: ${paymentIntent.status}`);
+
+        // Se já estiver em um estado avançado (especialmente para boleto que fica em 'requires_action')
+        // a gente não tenta confirmar de novo para evitar erro da Stripe
+        const statusesToSkipConfirm = ['requires_action', 'succeeded', 'processing', 'requires_capture'];
+
+        if (!statusesToSkipConfirm.includes(paymentIntent.status)) {
+            paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId, {
+                payment_method: paymentMethodId,
+            });
+        }
+
+        res.json({ paymentIntent });
+    } catch (error) {
+        console.error('❌ Erro ao confirmar pagamento:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.post('/create-payment-intent', async (req, res) => {
     const { amount, currency = 'brl', metadata, customerEmail } = req.body;
 

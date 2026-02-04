@@ -11,6 +11,10 @@ const reviewsRoutes = require('./routes/reviews');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// === WEBHOOKS STRIPE (Antes do JSON global para validação de assinatura) ===
+const stripeWebhooksRoutes = require('./routes/stripe-webhooks');
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhooksRoutes);
+
 app.use(express.json());
 const cors = require('cors');
 app.use(cors());
@@ -52,7 +56,12 @@ app.use((req, res) => {
 });
 
 // === INICIALIZAÇÃO DO SERVIDOR ===
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}`);
-});
+// === INICIALIZAÇÃO DO SERVIDOR ===
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

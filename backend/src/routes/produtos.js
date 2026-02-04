@@ -10,19 +10,22 @@ router.get('/', async (req, res) => {
   try {
     let query = sql`
       SELECT 
-        p.id_produto,
+        p.id,
         p.nome,
         p.descricao,
         p.preco,
         p.estoque,
+        p.imagem_principal,
+        p.imagens,
         COALESCE(json_agg(pc.categoria) FILTER (WHERE pc.categoria IS NOT NULL), '[]') as categorias
-      FROM produto p
-      LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
+      FROM produtos p
+      LEFT JOIN produto_categoria pc ON p.id = pc.id_produto
       WHERE p.ativo = TRUE
     `;
 
     const conditions = [];
-    const params = [];
+
+    // ... (rest of filtering logic, adjust fields if needed)
 
     if (categoria) {
       conditions.push(sql`pc.categoria = ${categoria}`);
@@ -35,26 +38,20 @@ router.get('/', async (req, res) => {
       query = sql`${query} AND (${conditions[0]}${conditions.slice(1).map(c => sql` OR ${c}`)})`;
     }
 
-    query = sql`${query} GROUP BY p.id_produto ORDER BY p.nome`;
+    query = sql`${query} GROUP BY p.id ORDER BY p.nome`;
 
     const produtos = await query;
 
-    // Adiciona URLs de imagem para cada produto
-    const produtosComImagens = await Promise.all(produtos.map(async (produto) => {
-      const imagens = await sql`
-        SELECT imagem_url FROM imagem_produto WHERE id_produto = ${produto.id_produto}
-      `;
-      return {
-        ...produto,
-        imagem_url: imagens[0]?.imagem_url || null,
-        imagens: imagens.map(i => i.imagem_url)
-      };
+    // Formata resposta sem precisar buscar imagens em outra tabela
+    const data = produtos.map(p => ({
+      ...p,
+      imagens: p.imagens || (p.imagem_principal ? [p.imagem_principal] : [])
     }));
 
     res.status(200).json({
       success: true,
-      count: produtosComImagens.length,
-      data: produtosComImagens
+      count: data.length,
+      data: data
     });
   } catch (error) {
     console.error('Erro ao listar produtos:', error);
@@ -71,25 +68,22 @@ router.get('/:id', async (req, res) => {
       SELECT 
         p.*,
         COALESCE(json_agg(pc.categoria) FILTER (WHERE pc.categoria IS NOT NULL), '[]') as categorias
-      FROM produto p
-      LEFT JOIN produto_categoria pc ON p.id_produto = pc.id_produto
-      WHERE p.id_produto = ${id} AND p.ativo = TRUE
-      GROUP BY p.id_produto
+      FROM produtos p
+      LEFT JOIN produto_categoria pc ON p.id = pc.id_produto
+      WHERE p.id = ${id} AND p.ativo = TRUE
+      GROUP BY p.id
     `;
 
     if (!produto) {
       return res.status(404).json({ success: false, error: 'Produto não encontrado' });
     }
 
-    const imagens = await sql`
-      SELECT imagem_url FROM imagem_produto WHERE id_produto = ${id}
-    `;
-
     res.status(200).json({
       success: true,
       data: {
         ...produto,
-        imagens: imagens.map(i => i.imagem_url)
+        // Garante que existe o array, mesmo que vazio
+        imagens: produto.imagens || (produto.imagem_principal ? [produto.imagem_principal] : [])
       }
     });
   } catch (error) {
