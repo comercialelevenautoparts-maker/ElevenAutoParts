@@ -16,10 +16,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 13%;
 
-    /* Primary - Golden/Yellow brand color #DFB956 */
-    --primary: 43 69% 61%;
+    /* Primary - Golden/Yellow brand color #F9B80E */
+    --primary: 43 96% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 43 69% 51%;
+    --primary-hover: 43 96% 42%;
 
     /* Secondary */
     --secondary: 40 20% 96%;
@@ -30,7 +30,7 @@
     --muted-foreground: 0 0% 45%;
 
     /* Accent */
-    --accent: 43 69% 61%;
+    --accent: 43 96% 52%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -40,14 +40,14 @@
     /* Borders & Inputs */
     --border: 40 10% 90%;
     --input: 40 10% 90%;
-    --ring: 43 69% 61%;
+    --ring: 43 96% 52%;
 
     --radius: 0.5rem;
 
     /* Custom tokens */
-    --golden: 43 69% 61%;
-    --golden-dark: 43 69% 50%;
-    --golden-light: 43 40% 95%;
+    --golden: 43 96% 52%;
+    --golden-dark: 43 96% 40%;
+    --golden-light: 43 96% 95%;
     --gray-light: 40 10% 96%;
     --gray-medium: 0 0% 60%;
     --gray-dark: 0 0% 30%;
@@ -80,7 +80,7 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 38 65% 64%;
+    --primary: 43 96% 52%;
     --primary-foreground: 0 0% 7%;
 
     --secondary: 0 0% 15%;
@@ -89,7 +89,7 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 38 65% 64%;
+    --accent: 43 96% 52%;
     --accent-foreground: 0 0% 7%;
 
     --destructive: 0 62% 30%;
@@ -97,7 +97,7 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 38 65% 64%;
+    --ring: 43 96% 52%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;

@@ -89,7 +89,7 @@ const IndicateAndEarn = () => {
                     <div className="lg:col-span-3 space-y-6">
 
                         {/* Hero Card */}
-                        <div className="bg-gradient-to-r from-primary to-[#F0C960] rounded-2xl p-5 md:p-8 text-primary-foreground relative overflow-hidden shadow-lg">
+                        <div className="bg-gradient-to-r from-primary to-[#FFCC33] rounded-2xl p-5 md:p-8 text-primary-foreground relative overflow-hidden shadow-lg">
                             <div className="relative z-10 max-w-xl">
                                 <h2 className="text-xl md:text-3xl font-bold mb-2.5 md:mb-4 uppercase tracking-tighter leading-[1.1]">Convide amigos e ganhe R$ 50</h2>
                                 <p className="text-[12px] md:text-lg opacity-90 mb-5 font-medium leading-relaxed">

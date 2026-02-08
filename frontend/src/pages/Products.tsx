@@ -39,7 +39,7 @@ const Products = () => {
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
               <div className="lg:w-1/2">
                 <div className="flex items-center gap-2 mb-2">
-                  <h1 className="text-4xl md:text-5xl font-medium text-[#D4AF37]">
+                  <h1 className="text-4xl md:text-5xl font-medium text-primary">
                     EXPLORE NOSSOS PRODUTOS
                   </h1>
                   <span className="section-subtitle">PRODUTOS</span>

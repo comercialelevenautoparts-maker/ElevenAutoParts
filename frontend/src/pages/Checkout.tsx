@@ -304,7 +304,7 @@ const Checkout = () => {
   const appearance = useMemo(() => ({
     theme: 'stripe' as const,
     variables: {
-      colorPrimary: '#DFB956',
+      colorPrimary: '#F9B80E',
     },
   }), []);
 
