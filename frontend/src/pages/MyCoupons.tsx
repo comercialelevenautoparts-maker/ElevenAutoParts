@@ -260,7 +260,7 @@ const MyCoupons = () => {
                                             <div>
                                                 <div className="flex justify-between items-start mb-3 md:mb-4">
                                                     <span className={`px-2.5 py-0.5 rounded-full text-[9px] md:text-xs uppercase tracking-wider font-black ${!coupon.ativo ? 'bg-gray-100 text-gray-700' :
-                                                        new Date(coupon.data_fim) < new Date() ? 'bg-red-100 text-red-700' : 'bg-[#DFB956]/20 text-[#DFB956]'
+                                                        new Date(coupon.data_fim) < new Date() ? 'bg-red-100 text-red-700' : 'bg-primary/20 text-primary'
                                                         }`}>
                                                         {!coupon.ativo ? 'Inativo' :
                                                             new Date(coupon.data_fim) < new Date() ? 'Expirado' : 'Ativo'}

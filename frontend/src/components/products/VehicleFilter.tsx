@@ -346,7 +346,7 @@ export const VehicleFilter = () => {
                                     className="h-24 w-auto object-contain transition-transform group-hover:scale-105"
                                 />
                             </div>
-                            <span className="text-xl text-[#DFB956] font-light">+</span>
+                            <span className="text-xl text-primary font-light">+</span>
                             <div className="relative group">
                                 {compatibilidade.imagem_conector ? (
                                     <img

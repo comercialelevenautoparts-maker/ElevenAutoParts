@@ -16,10 +16,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 13%;
 
-    /* Primary - Golden/Yellow brand color */
-    --primary: 38 65% 64%;
+    /* Primary - Golden/Yellow brand color #DFB956 */
+    --primary: 43 69% 61%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 38 65% 55%;
+    --primary-hover: 43 69% 51%;
 
     /* Secondary */
     --secondary: 40 20% 96%;
@@ -30,7 +30,7 @@
     --muted-foreground: 0 0% 45%;
 
     /* Accent */
-    --accent: 38 65% 64%;
+    --accent: 43 69% 61%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -40,19 +40,19 @@
     /* Borders & Inputs */
     --border: 40 10% 90%;
     --input: 40 10% 90%;
-    --ring: 38 65% 64%;
+    --ring: 43 69% 61%;
 
     --radius: 0.5rem;
 
     /* Custom tokens */
-    --golden: 38 65% 64%;
-    --golden-dark: 38 65% 50%;
-    --golden-light: 38 40% 95%;
+    --golden: 43 69% 61%;
+    --golden-dark: 43 69% 50%;
+    --golden-light: 43 40% 95%;
     --gray-light: 40 10% 96%;
     --gray-medium: 0 0% 60%;
     --gray-dark: 0 0% 30%;
     --success: 142 76% 36%;
-    --warning: 38 92% 50%;
+    --warning: 43 92% 50%;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
@@ -157,7 +157,7 @@
   }
 
   .section-title {
-    @apply text-2xl md:text-4xl font-medium text-[#DFB956];
+    @apply text-2xl md:text-4xl font-medium text-primary;
   }
 
   .section-subtitle {

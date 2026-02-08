@@ -586,7 +586,7 @@ const ProductDetail = () => {
             <div className="flex flex-col sm:flex-row gap-4 mt-2">
               <Button
                 onClick={() => handleAddToCart(true)}
-                className="flex-1 bg-[#DFB956] hover:bg-[#cba84d] text-primary-foreground py-6 text-sm font-semibold shadow-md transition-all active:scale-[0.98]"
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-sm font-semibold shadow-md transition-all active:scale-[0.98]"
                 disabled={(product.stock_quantity || 0) <= 0}
               >
                 <Rocket className="w-4 h-4 mr-2" />
@@ -596,7 +596,7 @@ const ProductDetail = () => {
               <Button
                 onClick={() => handleAddToCart(false)}
                 variant="outline"
-                className="flex-1 border-border hover:border-[#DFB956] hover:text-[#DFB956] hover:bg-[#DFB956]/5 py-6 text-sm font-semibold transition-all"
+                className="flex-1 border-border hover:border-primary hover:text-primary hover:bg-primary/5 py-6 text-sm font-semibold transition-all"
                 disabled={(product.stock_quantity || 0) <= 0}
               >
                 <ShoppingBag className="w-4 h-4 mr-2" />

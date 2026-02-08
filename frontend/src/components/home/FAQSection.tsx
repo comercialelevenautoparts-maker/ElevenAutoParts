@@ -125,7 +125,7 @@ const FAQSection = () => {
       </div>
 
       <div className="flex justify-center mt-24 animate-bounce">
-        <Mouse className="w-8 h-8 text-[#DFB956]" />
+        <Mouse className="w-8 h-8 text-primary" />
       </div>
     </section>
   );

@@ -50,7 +50,7 @@ const ExperienceSection = () => {
           <div className="lg:w-2/3 text-left w-full">
             <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 mb-3">
               <span className="section-subtitle text-[10px] md:text-sm lg:order-2">SOBRE NÓS</span>
-              <h2 className="font-medium text-[#DFB956] text-[clamp(16px,5vw,24px)] lg:text-4xl lg:order-1">ELEVEN AUTO PARTS</h2>
+              <h2 className="font-medium text-primary text-[clamp(16px,5vw,24px)] lg:text-4xl lg:order-1">ELEVEN AUTO PARTS</h2>
             </div>
             <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
               Na Eleven Auto Parts, somos movidos pela paixão por automóveis e pelo compromisso com nosso atendimento,
@@ -84,7 +84,7 @@ const ExperienceSection = () => {
       </div>
 
       <div className="flex justify-center mt-12 md:mt-24 animate-bounce">
-        <Mouse className="w-6 h-6 md:w-8 md:h-8 text-[#DFB956]" />
+        <Mouse className="w-6 h-6 md:w-8 md:h-8 text-primary" />
       </div>
     </section>
   );

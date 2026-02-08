@@ -304,7 +304,7 @@ const Checkout = () => {
   const appearance = useMemo(() => ({
     theme: 'stripe' as const,
     variables: {
-      colorPrimary: '#0f172a',
+      colorPrimary: '#DFB956',
     },
   }), []);
 
@@ -881,7 +881,7 @@ const Checkout = () => {
                   <div className="flex flex-col gap-3">
                     {orderSuccessData.boletoUrl && (
                       <Button
-                        className="w-full h-12 font-bold bg-[#DFB956] hover:bg-[#cba84d] text-white transition-all transform hover:scale-[1.02] shadow-lg"
+                        className="w-full h-12 font-bold bg-primary hover:bg-primary/90 text-white transition-all transform hover:scale-[1.02] shadow-lg"
                         onClick={() => window.open(orderSuccessData.boletoUrl, '_blank')}
                       >
                         <FileText className="w-5 h-5 mr-2" /> Abrir boleto bancário
@@ -889,7 +889,7 @@ const Checkout = () => {
                     )}
                     <Button
                       variant="outline"
-                      className="w-full h-12 font-semibold border-border hover:bg-muted hover:text-[#DFB956] text-muted-foreground transition-all"
+                      className="w-full h-12 font-semibold border-border hover:bg-muted hover:text-primary text-muted-foreground transition-all"
                       onClick={() => {
                         clearCart();
                         navigate('/pedidos', { state: { tab: orderSuccessData.type === 'boleto' ? 'em_analise' : 'concluidos' } });
@@ -910,7 +910,7 @@ const Checkout = () => {
                   </p>
                   <div className="flex flex-col gap-3">
                     <Button
-                      className="w-full h-12 font-bold bg-green-600 hover:bg-green-700 hover:text-[#DFB956] text-white transition-all transform hover:scale-[1.02] shadow-lg"
+                      className="w-full h-12 font-bold bg-green-600 hover:bg-green-700 text-white transition-all transform hover:scale-[1.02] shadow-lg"
                       onClick={() => {
                         clearCart();
                         navigate('/pedidos', { state: { tab: 'concluidos' } });

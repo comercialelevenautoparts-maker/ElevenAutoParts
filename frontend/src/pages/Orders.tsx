@@ -88,7 +88,7 @@ const Orders = () => {
         return "bg-emerald-600 text-white border-transparent";
       case 'pendente':
       case 'enviado':
-        return "bg-[#DFB956] text-white border-transparent shadow-[0_2px_10px_-3px_rgba(223,185,86,0.3)]";
+        return "bg-primary text-white border-transparent shadow-[0_2px_10px_-3px_rgba(var(--primary),0.3)]";
       case 'cancelado':
         return "bg-rose-600 text-white border-transparent";
       default:
@@ -462,7 +462,7 @@ const Orders = () => {
                 </div>
 
                 {/* Values Summary */}
-                <div className="bg-[#DFB956]/5 p-4 md:p-6 rounded-2xl border border-[#DFB956]/20 space-y-2 md:space-y-3">
+                <div className="bg-primary/5 p-4 md:p-6 rounded-2xl border border-primary/20 space-y-2 md:space-y-3">
                   <div className="flex justify-between text-[10px] md:text-xs font-semibold text-muted-foreground">
                     <span className="flex items-center gap-1.5 md:gap-2"><Tag className="w-2.5 h-2.5 md:w-3 md:h-3" /> Subtotal</span>
                     <span>R$ {selectedOrder.valor_produtos.toFixed(2)}</span>
@@ -477,7 +477,7 @@ const Orders = () => {
                       <span>- R$ {selectedOrder.valor_desconto.toFixed(2)}</span>
                     </div>
                   )}
-                  <Separator className="bg-[#DFB956]/20" />
+                  <Separator className="bg-primary/20" />
                   <div className="flex justify-between items-center pt-1">
                     <span className="text-xs md:text-sm font-bold text-foreground uppercase tracking-tight">Total</span>
                     <span className="text-base md:text-lg font-bold text-primary">R$ {selectedOrder.valor_total.toFixed(2)}</span>
@@ -489,7 +489,7 @@ const Orders = () => {
                 {(selectedOrder.status === 'entregue' || selectedOrder.status === 'pago') && (
                   <button
                     onClick={() => handleBuyAgain(selectedOrder)}
-                    className="w-full py-2.5 md:py-3 h-11 md:h-12 bg-[#DFB956] text-white font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-xl hover:bg-[#DFB956]/90 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full py-2.5 md:py-3 h-11 md:h-12 bg-primary text-white font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-xl hover:bg-primary/90 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
                   >
                     <Package className="w-3.5 h-3.5 md:w-4 md:h-4" /> Comprar Novamente
                   </button>

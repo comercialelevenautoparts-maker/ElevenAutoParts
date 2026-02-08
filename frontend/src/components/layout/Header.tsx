@@ -87,8 +87,8 @@ const Header = () => {
                     key={item.path}
                     to={item.path}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${isActive(item.path)
-                      ? 'bg-[#DFB956] text-white'
-                      : 'text-foreground hover:bg-[#DFB956]/100 hover:text-white'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-foreground hover:bg-primary hover:text-primary-foreground'
                       }`}
                     onClick={() => {
                       scrollToTop();
@@ -280,7 +280,7 @@ const Header = () => {
                       <div className="space-y-0.5">
                         <p className="px-3 text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 opacity-70">Sua Experiência</p>
                         <button
-                          className={`flex w-full items-center justify-between px-3 py-2 rounded-lg text-sm font-sm group transition-all ${isActive('/carrinho') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                          className={`flex w-full items-center justify-between px-3 py-2 rounded-lg text-sm font-sm group transition-all ${isActive('/carrinho') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                           onClick={() => { setIsMobileMenuOpen(false); navigate('/carrinho'); }}
                         >
                           <div className="flex items-center gap-2.5">
@@ -288,7 +288,7 @@ const Header = () => {
                             <span>Carrinho</span>
                           </div>
                           {getTotalItems() > 0 && (
-                            <span className="bg-primary text-primary-foreground w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-black shadow-sm aspect-square leading-none">
+                            <span className={`${isActive('/carrinho') ? 'bg-white text-primary' : 'bg-primary text-primary-foreground'} w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-black shadow-sm aspect-square leading-none`}>
                               {getTotalItems()}
                             </span>
                           )}
@@ -296,19 +296,19 @@ const Header = () => {
 
                         {user && (
                           <button
-                            className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/perfil') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                            className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/perfil') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                             onClick={() => { setIsMobileMenuOpen(false); navigate('/perfil'); }}
                           >
-                            <UserIcon className="w-4 h-4 text-primary" />
+                            <UserIcon className={`w-4 h-4 ${isActive('/perfil') ? 'text-primary-foreground' : 'text-primary'}`} />
                             <span>Minha conta</span>
                           </button>
                         )}
 
                         <button
-                          className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/suporte') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                          className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/suporte') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                           onClick={() => { setIsMobileMenuOpen(false); navigate('/suporte'); }}
                         >
-                          <Headphones className="w-4 h-4 text-primary" />
+                          <Headphones className={`w-4 h-4 ${isActive('/suporte') ? 'text-primary-foreground' : 'text-primary'}`} />
                           <span>Suporte</span>
                         </button>
 
@@ -326,38 +326,38 @@ const Header = () => {
                               <p className="px-3 text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 opacity-70">Painel do Cliente</p>
                             </div>
                             <button
-                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/pedidos') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/pedidos') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                               onClick={() => { setIsMobileMenuOpen(false); navigate('/pedidos'); }}
                             >
-                              <Package className="w-4 h-4 text-primary" />
+                              <Package className={`w-4 h-4 ${isActive('/pedidos') ? 'text-primary-foreground' : 'text-primary'}`} />
                               <span>Meus pedidos</span>
                             </button>
                             <button
-                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/favoritos') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/favoritos') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                               onClick={() => { setIsMobileMenuOpen(false); navigate('/favoritos'); }}
                             >
-                              <Heart className="w-4 h-4 text-primary" />
+                              <Heart className={`w-4 h-4 ${isActive('/favoritos') ? 'text-primary-foreground' : 'text-primary'}`} />
                               <span>Lista de desejos</span>
                             </button>
                             <button
-                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/meus-cupons') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/meus-cupons') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                               onClick={() => { setIsMobileMenuOpen(false); navigate('/meus-cupons'); }}
                             >
-                              <Ticket className="w-4 h-4 text-primary" />
+                              <Ticket className={`w-4 h-4 ${isActive('/meus-cupons') ? 'text-primary-foreground' : 'text-primary'}`} />
                               <span>Meus cupons</span>
                             </button>
                             <button
-                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/indique-e-ganhe') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/indique-e-ganhe') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                               onClick={() => { setIsMobileMenuOpen(false); navigate('/indique-e-ganhe'); }}
                             >
-                              <Gift className="w-4 h-4 text-primary" />
+                              <Gift className={`w-4 h-4 ${isActive('/indique-e-ganhe') ? 'text-primary-foreground' : 'text-primary'}`} />
                               <span>Indique e ganhe</span>
                             </button>
                             <button
-                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/rastreio') ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
+                              className={`flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-sm transition-all ${isActive('/rastreio') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground hover:bg-muted'}`}
                               onClick={() => { setIsMobileMenuOpen(false); navigate('/rastreio'); }}
                             >
-                              <Truck className="w-4 h-4 text-primary" />
+                              <Truck className={`w-4 h-4 ${isActive('/rastreio') ? 'text-primary-foreground' : 'text-primary'}`} />
                               <span>Rastreamento</span>
                             </button>
                           </>

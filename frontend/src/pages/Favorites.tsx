@@ -156,7 +156,7 @@ const Favorites = () => {
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-3 h-3 md:w-4 md:h-4 ${i < 4 ? 'text-[#DFB956] fill-current' : 'text-muted-foreground/30'
+                                  className={`w-3 h-3 md:w-4 md:h-4 ${i < 4 ? 'text-primary fill-current' : 'text-muted-foreground/30'
                                     }`}
                                 />
                               ))}

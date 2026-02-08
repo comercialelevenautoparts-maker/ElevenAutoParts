@@ -64,7 +64,7 @@ const HeroSection = () => {
         <div className="relative aspect-[6/10] md:aspect-[16/11] w-full group p-[3px] rounded-[32px] overflow-hidden">
           {/* Rotating Border Effect (Visible on Hover) */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-[-1000%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_35%,#DFB956_50%,transparent_65%,transparent_100%)] animate-rotate opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-[-1000%] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_35%,hsl(var(--primary))_50%,transparent_65%,transparent_100%)] animate-rotate opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
           <div className="relative w-full h-full overflow-hidden rounded-3xl bg-black transition-all duration-500 group-hover:scale-[1.005]">
@@ -94,7 +94,7 @@ const HeroSection = () => {
       </div>
 
       <div className="flex justify-center mt-12 md:mt-24 animate-bounce">
-        <Mouse className="w-6 h-6 md:w-8 md:h-8 text-[#DFB956]" />
+        <Mouse className="w-6 h-6 md:w-8 md:h-8 text-primary" />
       </div>
     </section >
   );
