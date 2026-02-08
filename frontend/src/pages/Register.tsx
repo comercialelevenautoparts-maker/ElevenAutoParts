@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, User, Lock, Eye, EyeOff, Phone, Calendar, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +9,25 @@ import Footer from '@/components/layout/Footer';
 type Step = 'email' | 'info';
 
 const Register = () => {
+  const [searchParams] = useSearchParams();
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Lógica de Rastreamento de Indicação (Persistência)
+  useEffect(() => {
+    const refParam = searchParams.get('ref');
+    if (refParam) {
+      // Se veio pela URL, salva no LocalStorage (prioridade)
+      localStorage.setItem('eleven_referral_code', refParam);
+      setReferralCode(refParam);
+    } else {
+      // Se não tem na URL, tenta recuperar do LocalStorage (caso tenha fechado a aba)
+      const storedRef = localStorage.getItem('eleven_referral_code');
+      if (storedRef) {
+        setReferralCode(storedRef);
+      }
+    }
+  }, [searchParams]);
+
   const [currentStep, setCurrentStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
@@ -54,13 +73,15 @@ const Register = () => {
       // Combine firstName and lastName for 'nome' as expected by AuthContext
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
-      const { error } = await signUp(email, formData.password, fullName);
+      const { error } = await signUp(email, formData.password, fullName, referralCode);
 
       if (error) {
         toast({
           variant: "destructive",
           title: "Erro no cadastro",
-          description: error.message,
+          description: error.message === "User already registered"
+            ? "Este e-mail já está cadastrado. Tente fazer login."
+            : error.message,
         });
       } else {
         toast({
@@ -130,6 +151,14 @@ const Register = () => {
               <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1 md:mb-2">
                 Criar uma conta
               </h1>
+
+              {referralCode && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-700 text-xs md:text-sm animate-in fade-in slide-in-from-top-2">
+                  <Check className="w-4 h-4" />
+                  <span>Código de indicação <strong>{referralCode}</strong> aplicado com sucesso!</span>
+                </div>
+              )}
+
               <p className="text-xs md:text-sm text-muted-foreground mb-6 leading-relaxed">
                 Insira seu e-mail abaixo. Enviaremos um código para verificar e proteger sua conta.
               </p>
@@ -153,7 +182,7 @@ const Register = () => {
 
                 <div className="text-center mt-4">
                   <span className="text-muted-foreground text-xs md:text-sm">Você já criou uma conta? </span>
-                  <Link to="/login" className="text-foreground text-xs md:text-sm font-black uppercase tracking-tight hover:underline">
+                  <Link to="/login" className="text-primary text-xs md:text-sm font-black tracking-tight hover:underline">
                     Login
                   </Link>
                 </div>

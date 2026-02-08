@@ -29,7 +29,9 @@ const Login = () => {
           title: "Erro ao fazer login",
           description: error.message === "Invalid login credentials"
             ? "E-mail ou senha incorretos."
-            : error.message,
+            : error.message === "Email not confirmed"
+              ? "Seu e-mail ainda não foi verificado. Por favor, verifique sua caixa de entrada e spam."
+              : error.message,
         });
       } else {
         const userName = data?.user?.user_metadata?.nome || "User";
@@ -150,7 +152,7 @@ const Login = () => {
               </button>
 
               <div className="text-center mt-6">
-                <Link to="/registro" className="text-foreground font-medium hover:underline">
+                <Link to="/registro" className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-colors">
                   Criar uma conta
                 </Link>
               </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -34,15 +34,26 @@ const Profile = () => {
     sobrenome: profile?.sobrenome || '',
     email: profile?.email || user?.email || '',
     telefone: profile?.telefone || '',
-    cpf: profile?.cpf ? formatCPF(profile?.cpf) : '',
+    cpf: profile?.cpf ? formatCPF(profile.cpf) : '',
     data_nascimento: profile?.data_nascimento || '',
     foto_url: profile?.foto_url || '',
   });
 
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+  // Mantém a sincronização caso o perfil mude no background (ex: atualização do banco)
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        nome: profile.nome || '',
+        sobrenome: profile.sobrenome || '',
+        email: profile.email || user?.email || '',
+        telefone: profile.telefone || '',
+        cpf: profile.cpf ? formatCPF(profile.cpf) : '',
+        data_nascimento: profile.data_nascimento || '',
+        foto_url: profile.foto_url || '',
+      });
+    }
+  }, [profile]);
+
 
   const handleSave = async () => {
     // Remover máscara do CPF antes de salvar

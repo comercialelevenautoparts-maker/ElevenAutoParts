@@ -301,12 +301,6 @@ const Checkout = () => {
     });
   };
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
-
   const appearance = useMemo(() => ({
     theme: 'stripe' as const,
     variables: {

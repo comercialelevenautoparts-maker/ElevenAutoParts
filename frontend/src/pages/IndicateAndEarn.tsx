@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gift, Copy, Check, Share2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -9,22 +9,45 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import ProfileSidebar from '@/components/account/ProfileSidebar';
+import { supabase } from '@/integrations/supabase/client';
 
 const IndicateAndEarn = () => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const { toast } = useToast();
     const navigate = useNavigate();
     const [copied, setCopied] = useState(false);
 
-    // Fallback se não tiver usuário logado (embora deva ser protegido)
-    if (!user) {
-        navigate('/login');
-        return null;
-    }
 
-    // Código de convite simulado (poderia vir do banco)
-    const referralCode = `ELEVEN${user.email?.split('@')[0].substring(0, 3).toUpperCase()}2025`;
-    const referralLink = `https://elevenautoparts.com.br/registro?ref=${referralCode}`;
+    // Obtém o código do perfil ou gera um fallback enquanto não está no banco
+    const dbReferralCode = profile?.referral_code;
+    const fallbackCode = user.email ? `ELEVEN${user.email.split('@')[0].substring(0, 3).toUpperCase()}2025` : "ELEVEN2025";
+    const referralCode = dbReferralCode || fallbackCode;
+    const referralLink = `${window.location.origin}/registro?ref=${referralCode}`;
+
+    // Lógica para gerar e salvar o código no banco se o usuário não tiver um
+    useEffect(() => {
+        const ensureReferralCode = async () => {
+            if (profile && !profile.referral_code) {
+                const generated = `ELEVEN${user.email?.split('@')[0].substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 1000)}`;
+
+                try {
+                    const { error } = await supabase
+                        .from('profiles')
+                        .update({ referral_code: generated })
+                        .eq('user_id', user.id);
+
+                    if (error) throw error;
+                    console.log('✅ Referral code gerado e salvo:', generated);
+                } catch (err) {
+                    console.error('❌ Erro ao salvar referral code:', err);
+                }
+            }
+        };
+
+        if (profile) {
+            ensureReferralCode();
+        }
+    }, [profile, user.email, user.id]);
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -90,17 +113,27 @@ const IndicateAndEarn = () => {
                             <Gift className="absolute -right-8 -bottom-8 w-40 h-40 md:w-64 md:h-64 text-white/10 rotate-12" />
                         </div>
 
-                        {/* Link Sharing */}
-                        <Card className="p-4 md:p-6 shadow-sm border-border/60">
-                            <h3 className="text-[10px] md:text-lg font-bold uppercase tracking-widest mb-3 text-muted-foreground/80">Seu link exclusivo</h3>
-                            <div className="flex flex-col sm:flex-row gap-2">
-                                <Input value={referralLink} readOnly className="bg-muted/30 h-10 md:h-12 text-[11px] md:text-sm font-medium" />
-                                <Button onClick={handleShare} className="btn-primary gap-2 h-10 md:h-12 px-6 font-bold text-[10px] md:text-xs uppercase tracking-widest flex-shrink-0">
-                                    <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                    Compartilhar
-                                </Button>
-                            </div>
-                        </Card>
+                        {/* Link Sharing & Balance */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <Card className="p-4 md:p-6 shadow-sm border-border/60 md:col-span-2">
+                                <h3 className="text-[10px] md:text-lg font-bold uppercase tracking-widest mb-3 text-muted-foreground/80">Seu link exclusivo</h3>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                    <Input value={referralLink} readOnly className="bg-muted/30 h-10 md:h-12 text-[11px] md:text-sm font-medium" />
+                                    <Button onClick={handleShare} className="btn-primary gap-2 h-10 md:h-12 px-6 font-bold text-[10px] md:text-xs uppercase tracking-widest flex-shrink-0">
+                                        <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                        Compartilhar
+                                    </Button>
+                                </div>
+                            </Card>
+
+                            <Card className="p-4 md:p-6 shadow-sm border-border/60 flex flex-col justify-center items-center bg-primary/5 border-primary/20">
+                                <h3 className="text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2 text-primary/80">Saldo de Créditos</h3>
+                                <div className="text-2xl md:text-4xl font-black text-primary tracking-tighter">
+                                    R$ {profile?.saldo_creditos?.toFixed(2) || "0,00"}
+                                </div>
+                                <p className="text-[9px] md:text-[10px] uppercase font-bold text-muted-foreground mt-2">Disponível para uso</p>
+                            </Card>
+                        </div>
 
                         {/* How it works */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">

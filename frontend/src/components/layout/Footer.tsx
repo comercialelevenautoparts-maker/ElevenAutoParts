@@ -91,12 +91,13 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Logo and Newsletter */}
-          <div className="lg:col-span-2 pr-10 order-last lg:order-first">
+          <div id="newsletter-section" className="lg:col-span-2 pr-10 order-last lg:order-first">
             <Link to="/">
               <img src={logoImage} alt="Eleven Auto Parts" className="h-16 mb-6" />
             </Link>
             <form onSubmit={handleNewsletter} className="flex gap-2">
               <input
+                id="newsletter-input"
                 type="email"
                 placeholder="Insira seu e-mail"
                 value={email}

@@ -45,21 +45,25 @@ const Header = () => {
   };
 
   const scrollToFooter = () => {
-    const footerElement = document.getElementById('newsletter-section');
-    if (footerElement) {
-      footerElement.scrollIntoView({ behavior: 'smooth' });
+    const newsletterSection = document.getElementById('newsletter-section');
+    const newsletterInput = document.getElementById('newsletter-input');
+
+    if (newsletterSection) {
+      newsletterSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Pequeno delay para esperar o scroll terminar antes de focar
+      setTimeout(() => {
+        newsletterInput?.focus();
+      }, 800);
     } else {
-      // Se não encontrar o elemento específico da newsletter, tenta encontrar o footer geral
       const footer = document.querySelector('footer');
-      if (footer) {
-        footer.scrollIntoView({ behavior: 'smooth' });
-      }
+      footer?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
     <>
-      <div className="bg-primary text-primary-foreground py-1.5 px-2 text-center font-medium leading-none whitespace-nowrap overflow-hidden">
+      <div className="bg-primary text-primary-foreground py-2 md:py-2 px-2 text-center font-medium leading-none whitespace-nowrap overflow-hidden">
         <button
           onClick={scrollToFooter}
           className="hover:underline focus:outline-none bg-transparent border-none text-inherit cursor-pointer inline-flex items-center justify-center gap-1 w-full"

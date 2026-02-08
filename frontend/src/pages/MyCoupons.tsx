@@ -96,10 +96,6 @@ const MyCoupons = () => {
         }
     });
 
-    if (!user) {
-        navigate('/login');
-        return null;
-    }
 
     const handleCreateCoupon = (e: React.FormEvent) => {
         e.preventDefault();

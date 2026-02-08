@@ -22,10 +22,8 @@ const Favorites = () => {
   useEffect(() => {
     if (user) {
       loadFavorites();
-    } else {
-      navigate('/login');
     }
-  }, [user]); // Only re-run if user changes. remove loadFavorites from dependencies to prevent loops if it's not memoized.
+  }, [user]);
 
   const handleRemoveFavorite = async (produtoId: string) => {
     try {
@@ -90,9 +88,6 @@ const Favorites = () => {
     }
   };
 
-  if (!user) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-background">

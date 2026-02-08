@@ -12,7 +12,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ data: { user: User | null; session: Session | null } | null; error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, nome: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, nome: string, referralCode?: string | null) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
 }
@@ -28,13 +28,22 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  // Inicializa estados com dados do localStorage para velocidade instantânea
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('eleven_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(() => {
+    const saved = localStorage.getItem('eleven_profile');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('eleven_isAdmin') === 'true';
+  });
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, currentUser?: User | null) => {
     // 1. Fetch Profile
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
@@ -43,7 +52,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
 
     if (!profileError && profileData) {
-      setProfile(profileData as Profile);
+      const currentProfile = profileData as Profile;
+      setProfile(currentProfile);
+
+      // Salva no cache para o próximo refresh ser instantâneo
+      localStorage.setItem('eleven_profile', JSON.stringify(currentProfile));
+
+      // Lógica de Vínculo de Indicação (Dynamic link to database)
+      const referrerCode = currentUser?.user_metadata?.referral_code;
+      if (!currentProfile.referred_by && referrerCode) {
+        const { data: referrerProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', referrerCode)
+          .maybeSingle();
+
+        if (referrerProfile) {
+          await supabase
+            .from('profiles')
+            .update({ referred_by: referrerProfile.id })
+            .eq('id', currentProfile.id);
+
+          const updatedProfile = { ...currentProfile, referred_by: referrerProfile.id } as Profile;
+          setProfile(updatedProfile);
+          localStorage.setItem('eleven_profile', JSON.stringify(updatedProfile));
+        }
+      }
     }
 
     // 2. Check Admin Role
@@ -51,14 +85,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', 'admin') // Check directly for admin role
+      .eq('role', 'admin')
       .maybeSingle();
 
-    if (!rolesError && rolesData) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
+    const isUserAdmin = !!(!rolesError && rolesData);
+    setIsAdmin(isUserAdmin);
+    localStorage.setItem('eleven_isAdmin', String(isUserAdmin));
   };
 
   useEffect(() => {
@@ -66,15 +98,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
 
-        if (session?.user) {
+        if (currentUser) {
+          localStorage.setItem('eleven_user', JSON.stringify(currentUser));
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            fetchProfile(currentUser.id, currentUser);
           }, 0);
         } else {
           setProfile(null);
           setIsAdmin(false);
+          localStorage.removeItem('eleven_user');
+          localStorage.removeItem('eleven_profile');
+          localStorage.removeItem('eleven_isAdmin');
         }
       }
     );
@@ -82,10 +119,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
 
-      if (session?.user) {
-        fetchProfile(session.user.id);
+      if (currentUser) {
+        localStorage.setItem('eleven_user', JSON.stringify(currentUser));
+        fetchProfile(currentUser.id, currentUser);
       }
 
       setLoading(false);
@@ -112,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
-  const signUp = async (email: string, password: string, nome: string) => {
+  const signUp = async (email: string, password: string, nome: string, referralCode?: string | null) => {
     const redirectUrl = `${window.location.origin}/`;
 
     const { error } = await supabase.auth.signUp({
@@ -122,6 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         emailRedirectTo: redirectUrl,
         data: {
           nome,
+          referral_code: referralCode, // Metadata para o trigger ou armazenamento futuro
         },
       },
     });

@@ -127,6 +127,47 @@ export type Database = {
           },
         ]
       }
+      creditos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          id_referencia: string | null
+          status: string | null
+          tipo: string | null
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          id_referencia?: string | null
+          status?: string | null
+          tipo?: string | null
+          user_id?: string | null
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          id_referencia?: string | null
+          status?: string | null
+          tipo?: string | null
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creditos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       cupons: {
         Row: {
           ativo: boolean | null
@@ -658,6 +699,9 @@ export type Database = {
           nome: string | null
           sobrenome: string | null
           telefone: string | null
+          referral_code: string | null
+          referred_by: string | null
+          saldo_creditos: number | null
           updated_at: string
           user_id: string
         }
@@ -671,6 +715,9 @@ export type Database = {
           nome?: string | null
           sobrenome?: string | null
           telefone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          saldo_creditos?: number | null
           updated_at?: string
           user_id: string
         }
@@ -684,6 +731,9 @@ export type Database = {
           nome?: string | null
           sobrenome?: string | null
           telefone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          saldo_creditos?: number | null
           updated_at?: string
           user_id?: string
         }

@@ -141,6 +141,24 @@ export const StripePaymentForm = ({
 
             const order = await onCreateOrder(orderStatus, finalPaymentMethod);
 
+            // Vincula o PaymentIntent ao Order ID para permitir webhooks futuros (ex: boleto pago)
+            if (paymentIntentId && order.id) {
+                try {
+                    console.log('🔗 Vinculando pedido ao pagamento...');
+                    await fetch(`${apiUrl}/api/update-payment-intent`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            paymentIntentId,
+                            orderId: order.id
+                        }),
+                    });
+                } catch (linkError) {
+                    console.error('⚠️ Falha ao vincular metadata, mas pedido criado:', linkError);
+                    // Não bloqueia o fluxo, pois o pedido já foi criado
+                }
+            }
+
             if (paymentIntent.status === 'succeeded') {
                 toast.success("Pagamento aprovado!");
                 onSuccess(order.id, { type: finalPaymentMethod as any });

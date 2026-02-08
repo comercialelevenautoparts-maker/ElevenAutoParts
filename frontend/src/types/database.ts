@@ -10,8 +10,22 @@ export interface Profile {
   telefone: string | null;
   foto_url: string | null;
   data_nascimento: string | null;
+  referral_code: string | null;
+  referred_by: string | null;
+  saldo_creditos: number | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Creditos {
+  id: string;
+  user_id: string;
+  valor: number;
+  id_referencia: string | null;
+  descricao: string | null;
+  tipo: 'entrada' | 'saida';
+  status: string;
+  created_at: string;
 }
 
 export interface Categoria {

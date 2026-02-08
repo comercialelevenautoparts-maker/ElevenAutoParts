@@ -28,6 +28,8 @@ import WhatsAppButton from "./components/common/WhatsAppButton";
 
 import ScrollToTop from "./components/common/ScrollToTop";
 
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -47,14 +49,18 @@ const App = () => (
             <Route path="/produtos" element={<Products />} />
             <Route path="/produto/:id" element={<ProductDetail />} />
             <Route path="/carrinho" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/pedidos" element={<Orders />} />
-            <Route path="/perfil" element={<Profile />} />
-            <Route path="/favoritos" element={<Favorites />} />
-            <Route path="/meus-cupons" element={<MyCoupons />} />
+
+            {/* Protected Routes */}
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/pedidos" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/favoritos" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+            <Route path="/meus-cupons" element={<ProtectedRoute><MyCoupons /></ProtectedRoute>} />
+            <Route path="/indique-e-ganhe" element={<ProtectedRoute><IndicateAndEarn /></ProtectedRoute>} />
+
             <Route path="/suporte" element={<Support />} />
             <Route path="/rastreio" element={<Tracking />} />
-            <Route path="/indique-e-ganhe" element={<IndicateAndEarn />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/terms$conditions" element={<TermsConditions />} />
             <Route path="/privacy$policy" element={<PrivacyPolicy />} />

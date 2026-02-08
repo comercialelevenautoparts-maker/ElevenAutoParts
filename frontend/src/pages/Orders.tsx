@@ -44,10 +44,6 @@ const Orders = () => {
     navigate('/carrinho');
   };
 
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
 
   const tabs = [
     { id: 'concluidos', label: 'Concluídos' },
