@@ -63,7 +63,8 @@ async function testReferralFlow() {
     // 3. Simular Pagamento via Webhook
     console.log('\nStep 3: Simulando aprovação de pagamento (Webhook)...');
     try {
-        const response = await axios.post('http://localhost:3000/api/webhooks/stripe', {
+        const PORT = process.env.PORT || 3000;
+        const response = await axios.post(`http://localhost:${PORT}/api/webhooks/stripe`, {
             type: 'payment_intent.succeeded',
             data: {
                 object: {

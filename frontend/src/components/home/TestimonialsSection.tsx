@@ -16,7 +16,8 @@ interface Review {
 // 1. Função para buscar do Backend (Google via Proxy)
 const fetchReviews = async (): Promise<Review[]> => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews`);
+    const apiBase = import.meta.env.VITE_API_URL || '';
+    const response = await fetch(`${apiBase}/api/reviews`);
     if (!response.ok) throw new Error('Falha ao buscar avaliações');
     return await response.json();
   } catch (error) {
