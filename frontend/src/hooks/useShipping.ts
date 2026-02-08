@@ -19,7 +19,7 @@ export const useShipping = () => {
     const [options, setOptions] = useState<ShippingOption[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const API_URL = import.meta.env.VITE_API_URL || '';
 
     const calculateShipping = async (cep: string, items: any[]) => {
         const cleanCep = cep.replace(/\D/g, '');

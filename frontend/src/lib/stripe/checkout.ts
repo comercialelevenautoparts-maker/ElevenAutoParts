@@ -28,7 +28,7 @@ export interface CheckoutSessionData {
  * @param data Dados para criar a sessão
  * @returns Session ID da Stripe
  */
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export async function createCheckoutSession(data: CheckoutSessionData) {
     try {

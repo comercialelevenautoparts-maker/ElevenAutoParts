@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
+const sql = require('../config/database');
 
 const supabase = createClient(
     process.env.SUPABASE_URL,
@@ -83,6 +84,54 @@ router.post('/create-checkout-session', async (req, res) => {
         });
         res.json({ id: session.id, url: session.url });
     } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Atualiza metadados do PaymentIntent para vincular ao Pedido
+router.post('/update-payment-intent', async (req, res) => {
+    const { paymentIntentId, orderId } = req.body;
+
+    if (!paymentIntentId || !orderId) {
+        return res.status(400).json({ error: 'paymentIntentId e orderId são obrigatórios' });
+    }
+
+    try {
+        await stripe.paymentIntents.update(paymentIntentId, {
+            metadata: { orderId }
+        });
+        console.log(`✅ PaymentIntent ${paymentIntentId} vinculado ao pedido ${orderId}`);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Erro ao atualizar metadata:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Limpeza via Supabase Client (HTTPS) para evitar bloqueio de porta do Postgres
+router.post('/cleanup-orders', async (req, res) => {
+    try {
+        console.log('🔍 Executando limpeza de pedidos antigos (via Supabase Client)...');
+
+        // 3 dias atrás
+        const dateLimit = new Date();
+        dateLimit.setDate(dateLimit.getDate() - 3);
+
+        const { data: result, error } = await supabase
+            .from('pedidos')
+            .update({ status: 'cancelado' })
+            .eq('status', 'pendente')
+            .lt('created_at', dateLimit.toISOString())
+            .select('id');
+
+        if (error) {
+            throw error;
+        }
+
+        console.log(`✅ Limpeza concluída: ${result ? result.length : 0} pedidos cancelados.`);
+        res.json({ success: true, count: result ? result.length : 0, canceledIds: result ? result.map(r => r.id) : [] });
+    } catch (error) {
+        console.error('❌ Erro na limpeza de pedidos:', error.message);
         res.status(500).json({ error: error.message });
     }
 });

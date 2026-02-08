@@ -126,4 +126,108 @@ function getSimulationResult() {
     ];
 }
 
+/**
+ * GET /api/frete/tracking/:code
+ * Rastreia um pedido usando Melhor Envio ou Fallback
+ */
+router.get('/tracking/:code', async (req, res) => {
+    const { code } = req.params;
+    const token = process.env.MELHOR_ENVIO_TOKEN;
+
+    console.log(`🔍 Buscando rastreio para o código: ${code}`);
+
+    // TEST BYPASS: Se for um código de teste nosso, retorna mock formatado
+    if (code.startsWith('ELEVEN-TEST')) {
+        return res.json(getTestTrackingData(code));
+    }
+
+    if (!token) {
+        return res.status(503).json({ error: 'Serviço de rastreio indisponível no momento.' });
+    }
+
+    try {
+        const melhoEnvioUrl = process.env.MELHOR_ENVIO_ENV === 'production'
+            ? 'https://melhorenvio.com.br/api/v2/me/shipment/tracking'
+            : 'https://sandbox.melhorenvio.com.br/api/v2/me/shipment/tracking';
+
+        const response = await fetch(melhoEnvioUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'User-Agent': 'ElevenAutoParts (contato@elevenautoparts.com.br)'
+            },
+            body: JSON.stringify({ orders: [code] })
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha na comunicação com Melhor Envio');
+        }
+
+        const data = await response.json();
+
+        // Melhor Envio retorna um objeto indexado pelo código do pedido ou ID
+        const trackingInfo = data[code] || Object.values(data)[0];
+
+        if (!trackingInfo || trackingInfo.error) {
+            return res.status(404).json({ error: 'Objeto não encontrado ou ainda não postado.' });
+        }
+
+        // Formata para o padrão do nosso frontend
+        const formattedData = {
+            code: trackingInfo.tracking || code,
+            carrier: trackingInfo.company?.name || 'Transportadora',
+            status: trackingInfo.status || 'Em processamento',
+            lastUpdate: trackingInfo.updated_at ? new Date(trackingInfo.updated_at).toLocaleString('pt-BR') : 'Sem dados',
+            events: (trackingInfo.events || []).map(ev => ({
+                date: new Date(ev.created_at).toLocaleDateString('pt-BR'),
+                time: new Date(ev.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                location: ev.location || 'Local não informado',
+                status: ev.status,
+                description: ev.description
+            })).reverse()
+        };
+
+        res.json(formattedData);
+
+    } catch (error) {
+        console.error('Erro ao rastrear:', error);
+        res.status(500).json({ error: 'Erro interno ao processar rastreio.' });
+    }
+});
+
+function getTestTrackingData(code) {
+    return {
+        code: code,
+        carrier: 'Eleven Logística',
+        status: 'EM ROTA DE ENTREGA',
+        lastUpdate: new Date().toLocaleString('pt-BR'),
+        serviceType: 'Entrega Expressa Eleven',
+        events: [
+            {
+                date: new Date().toLocaleDateString('pt-BR'),
+                time: '08:15',
+                location: 'Unidade de Distribuição - São Paulo/SP',
+                status: 'EM ROTA DE ENTREGA',
+                description: 'O entregador já saiu da unidade. Prepare-se para receber seu pacote!',
+            },
+            {
+                date: '07/02/2026',
+                time: '19:40',
+                location: 'CTE CAJAMAR - CAJAMAR/SP',
+                status: 'OBJETO ENCAMINHADO',
+                description: 'Carga em trânsito para a unidade de destino final.',
+            },
+            {
+                date: '06/02/2026',
+                time: '14:20',
+                location: 'Eleven Auto Parts - Matriz',
+                status: 'OBJETOS POSTADOS',
+                description: 'Sua palheta foi conferida, embalada e entregue à transportadora.',
+            }
+        ]
+    };
+}
+
 module.exports = router;

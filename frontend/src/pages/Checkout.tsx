@@ -200,7 +200,7 @@ const Checkout = () => {
     const fetchPaymentIntent = async () => {
       if (step === 2 && finalTotal > 0 && !clientSecret) {
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+          const apiUrl = import.meta.env.VITE_API_URL || '';
           const response = await fetch(`${apiUrl}/api/create-payment-intent`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

@@ -30,7 +30,8 @@ interface TrackingData {
 // Real Data Service calling Backend
 const fetchTrackingInfo = async (code: string): Promise<TrackingData> => {
     const cleanCode = code.toUpperCase().trim();
-    const response = await fetch(`http://localhost:3000/api/frete/tracking/${cleanCode}`);
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const response = await fetch(`${apiUrl}/api/frete/tracking/${cleanCode}`);
 
     if (!response.ok) {
         const errorData = await response.json();

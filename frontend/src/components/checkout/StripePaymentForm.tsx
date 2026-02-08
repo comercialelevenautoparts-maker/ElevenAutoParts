@@ -105,7 +105,7 @@ export const StripePaymentForm = ({
             }
 
             // 3. Confirm payment on the BACKEND to avoid Stripe.js automatic modal
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+            const apiUrl = import.meta.env.VITE_API_URL || '';
             const paymentIntentId = clientSecret.split('_secret_')[0];
 
             const response = await fetch(`${apiUrl}/api/confirm-payment`, {
