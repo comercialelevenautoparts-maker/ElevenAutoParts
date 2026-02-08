@@ -36,7 +36,7 @@ const Support = () => {
               </div>
               <div>
                 <p className="text-[10px] md:text-sm text-muted-foreground">Email</p>
-                <p className="text-[11px] md:text-base font-medium">comercial.elevenautoparts@outlook.com</p>
+                <p className="text-[11px] md:text-[10px] lg:text-base font-medium">comercial.elevenautoparts@outlook.com</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -45,7 +45,7 @@ const Support = () => {
               </div>
               <div>
                 <p className="text-[10px] md:text-sm text-muted-foreground">Telefone</p>
-                <p className="text-[11px] md:text-base font-medium">+55 11 91732-1666</p>
+                <p className="text-[11px] md:text-[10px] lg:text-base font-medium">+55 11 91732-1666</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -54,7 +54,7 @@ const Support = () => {
               </div>
               <div>
                 <p className="text-[10px] md:text-sm text-muted-foreground">Endereço</p>
-                <p className="text-[11px] md:text-base font-medium">São Paulo, SP</p>
+                <p className="text-[11px] md:text-[10px] lg:text-base font-medium">São Paulo, SP</p>
               </div>
             </div>
           </div>

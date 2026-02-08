@@ -130,7 +130,7 @@ const TestimonialsSection = () => {
             {displayedReviews.map((testimonial) => (
               <div
                 key={testimonial.id}
-                className="min-w-[92vw] lg:min-w-[calc(33.333%-22px)] min-h-[280px] bg-white dark:bg-muted/50 rounded-2xl p-6 shadow-sm border border-border/50 relative flex flex-col group hover:shadow-md transition-shadow snap-center lg:snap-start"
+                className="min-w-[92vw] md:min-w-[45vw] lg:min-w-[calc(33.333%-22px)] min-h-[280px] bg-white dark:bg-muted/50 rounded-2xl p-6 shadow-sm border border-border/50 relative flex flex-col group hover:shadow-md transition-shadow snap-center lg:snap-start"
               >
                 <Quote className="absolute top-6 right-6 w-8 h-8 text-primary" />
 

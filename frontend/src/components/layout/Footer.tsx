@@ -192,7 +192,7 @@ const Footer = () => {
 
         {/* Bottom */}
         <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-muted-foreground justify-center md:justify-start">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] lg:text-[11px] xl:text-sm text-muted-foreground justify-center md:justify-start whitespace-nowrap">
             <Link to="/terms$conditions" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Termos &amp; Condições</Link>
             <span>|</span>
             <Link to="/privacy$policy" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-foreground">Política de Privacidade</Link>
@@ -214,8 +214,8 @@ const Footer = () => {
             </a>
           </div>
 
-          <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
-            <p className="text-xs md:text-sm text-muted-foreground">
+          <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right whitespace-nowrap">
+            <p className="text-[10px] lg:text-[11px] xl:text-sm text-muted-foreground">
               © 2025 Eleven Auto Parts. Todos os direitos reservados.
             </p>
             <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest">

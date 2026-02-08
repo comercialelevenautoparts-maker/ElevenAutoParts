@@ -15,33 +15,33 @@ const CancellationPolicy = () => {
                     </p>
                 </section>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                    <div className="bg-card border border-border rounded-xl p-6 md:p-8 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 md:mb-6">
-                            <Clock className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-16 max-w-5xl mx-auto">
+                    <div className="bg-card border border-border rounded-xl p-6 lg:p-6 flex flex-col items-center text-center">
+                        <div className="w-12 h-12 lg:w-14 lg:h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 lg:mb-5">
+                            <Clock className="w-6 h-6 lg:w-7 lg:h-7 text-primary" />
                         </div>
-                        <h3 className="font-bold text-lg md:text-xl mb-2 md:mb-3">Janela de cancelamento</h3>
-                        <p className="text-[13px] md:text-base text-muted-foreground">
+                        <h3 className="font-bold text-lg lg:text-lg mb-2">Janela de cancelamento</h3>
+                        <p className="text-[13px] lg:text-sm text-muted-foreground">
                             Os pedidos podem ser cancelados até 24 horas antes à sua realização, com reembolso integral.
                         </p>
                     </div>
 
-                    <div className="bg-card border border-border rounded-xl p-6 md:p-8 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 md:mb-6">
-                            <Archive className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                    <div className="bg-card border border-border rounded-xl p-6 lg:p-6 flex flex-col items-center text-center">
+                        <div className="w-12 h-12 lg:w-14 lg:h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 lg:mb-5">
+                            <Archive className="w-6 h-6 lg:w-7 lg:h-7 text-primary" />
                         </div>
-                        <h3 className="font-bold text-lg md:text-xl mb-2 md:mb-3">Processo</h3>
-                        <p className="text-[13px] md:text-base text-muted-foreground">
+                        <h3 className="font-bold text-lg lg:text-lg mb-2">Processo</h3>
+                        <p className="text-[13px] lg:text-sm text-muted-foreground">
                             Acesse nossa seção de Gerenciamento de Pedidos para cancelar sua pedido sem complicações.
                         </p>
                     </div>
 
-                    <div className="bg-card border border-border rounded-xl p-6 md:p-8 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 md:mb-6">
-                            <Wallet className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+                    <div className="bg-card border border-border rounded-xl p-6 lg:p-6 flex flex-col items-center text-center">
+                        <div className="w-12 h-12 lg:w-14 lg:h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4 lg:mb-5">
+                            <Wallet className="w-6 h-6 lg:w-7 lg:h-7 text-primary" />
                         </div>
-                        <h3 className="font-bold text-lg md:text-xl mb-2 md:mb-3">Estorno</h3>
-                        <p className="text-[13px] md:text-base text-muted-foreground">
+                        <h3 className="font-bold text-lg lg:text-lg mb-2">Estorno</h3>
+                        <p className="text-[13px] lg:text-sm text-muted-foreground">
                             Os reembolsos de pedidos cancelados são processados em até 5-7 dias úteis.
                         </p>
                     </div>

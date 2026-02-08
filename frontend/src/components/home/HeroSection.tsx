@@ -11,13 +11,14 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="container mx-auto px-4 py-8 md:py-16 mt-4 md:mt-24">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <section className="container mx-auto px-4 py-8 md:py-12 lg:py-4 mt-4 md:mt-12 lg:mt-18 xl:mt-18 2xl:mt-24">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
         {/* Left Content */}
         <div className="space-y-6">
           <div className="text-center lg:text-left">
-            <h1 className="text-3xl md:text-4xl lg:text-6xl font-extrabold text-foreground leading-tight tracking-tighter">
-              ELEVE SEU CARRO COM <span className="text-primary lg:block">ELEVEN AUTO PARTS</span>
+            <h1 className="text-3xl md:text-[52px] lg:text-[clamp(18px,2.8vw,46px)] font-extrabold text-foreground leading-[1.1] lg:leading-tight tracking-tighter uppercase">
+              <span className="block whitespace-nowrap">ELEVE SEU CARRO COM </span>
+              <span className="text-primary block whitespace-nowrap">ELEVEN AUTO PARTS</span>
             </h1>
             <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-lg mx-auto lg:mx-0">
               Explore o mundo das peças automotivas na AutoParts, onde qualidade encontra preço justo. Descubra as melhores palhetas, acessórios e peças com promoções exclusivas.
