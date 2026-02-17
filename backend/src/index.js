@@ -23,6 +23,8 @@ app.use(cors());
 app.use('/auth', authRoutes);           // Registro, login, verificação
 app.use('/api/produtos', produtosRoutes); // Listagem e detalhe de produtos
 app.use('/api/carrinho', carrinhoRoutes); // Carrinho do usuário (protegido)
+const pedidosRoutes = require('./routes/pedidos');
+app.use('/api/pedidos', pedidosRoutes); // Rotas de pedidos (Admin e gestão)
 const freteRoutes = require('./routes/frete');
 app.use('/api/frete', freteRoutes); // Cálculo de frete
 
