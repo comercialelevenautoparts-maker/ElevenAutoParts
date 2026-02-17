@@ -25,6 +25,7 @@ import CancellationPolicy from "./pages/CancellationPolicy";
 import ReturnPolicy from "./pages/ReturnPolicy";
 import { CartSyncManager } from "./components/CartSyncManager";
 import WhatsAppButton from "./components/common/WhatsAppButton";
+import BlingIntegration from "./pages/admin/BlingIntegration";
 
 import ScrollToTop from "./components/common/ScrollToTop";
 
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/rastreio" element={<Tracking />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/admin/bling" element={<BlingIntegration />} />
             <Route path="/terms$conditions" element={<TermsConditions />} />
             <Route path="/privacy$policy" element={<PrivacyPolicy />} />
             <Route path="/cancellation-policy" element={<CancellationPolicy />} />
