@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { syncProduct, syncPrice } = require('../services/stripeSyncService');
+const BlingService = require('../services/BlingService');
 
 const { createClient } = require('@supabase/supabase-js');
 
@@ -65,6 +66,16 @@ router.post('/', async (req, res) => {
                     if (error) {
                         console.error('Erro ao atualizar pedido:', error);
                     } else {
+                        // --- INTEGRACAO BLING ---
+                        try {
+                            // Dispara a criação do pedido no Bling de forma assíncrona
+                            BlingService.createSalesOrder(orderId).catch(err => {
+                                console.error('⚠️ Erro ao criar pedido no Bling (via Webhook):', err.message);
+                            });
+                        } catch (blingErr) {
+                            console.error('⚠️ Erro ao disparar integração Bling:', blingErr.message);
+                        }
+
                         // --- LÓGICA DE INDIQUE E GANHE (REFERRAL REWARDS) ---
                         try {
                             // 1. Pega o dono do pedido

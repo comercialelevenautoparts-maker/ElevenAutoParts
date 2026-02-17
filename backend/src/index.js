@@ -31,6 +31,10 @@ const stripeRoutes = require('./routes/stripe');
 app.use('/api', stripeRoutes); // Ex: /api/create-checkout-session
 app.use('/api/reviews', reviewsRoutes); // Sincronização de depoimentos do Google
 
+// === ROTAS BLING (ERP) ===
+const blingRoutes = require('./routes/bling');
+app.use('/api/bling', blingRoutes);
+
 
 // === HEALTH CHECK ===
 app.get('/', (req, res) => {
