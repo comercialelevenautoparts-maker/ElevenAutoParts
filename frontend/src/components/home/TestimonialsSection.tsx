@@ -16,12 +16,18 @@ interface Review {
 // 1. Função para buscar do Backend (Google via Proxy)
 const fetchReviews = async (): Promise<Review[]> => {
   try {
-    const apiBase = import.meta.env.VITE_API_URL || '';
+    // Busca a URL do backend. Prioriza a variável de ambiente, senão usa o host atual (rewrite do Vercel)
+    const apiBase = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+    console.log(`🔍 Buscando depoimentos em: ${apiBase}/api/reviews`);
+
     const response = await fetch(`${apiBase}/api/reviews`);
-    if (!response.ok) throw new Error('Falha ao buscar avaliações');
-    return await response.json();
+    if (!response.ok) throw new Error(`Status: ${response.status}`);
+
+    const data = await response.json();
+    console.log(`✅ ${data.length} depoimentos carregados.`);
+    return data;
   } catch (error) {
-    console.error("Erro ao buscar depoimentos:", error);
+    console.error("❌ Erro ao buscar depoimentos:", error);
     return [];
   }
 };
