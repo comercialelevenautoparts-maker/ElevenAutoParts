@@ -407,7 +407,7 @@ const Orders = () => {
 
                       {isAdmin ? (
                         <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2"> 
                             <div className="relative flex-1">
                               <Input
                                 placeholder="Inserir código..."
