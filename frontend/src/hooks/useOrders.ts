@@ -69,7 +69,7 @@ export const useCreateOrder = () => {
       valor_desconto: number;
       valor_total: number;
       forma_pagamento: string;
-      metodo_envio?: string;
+      tipo_frete?: string;
       status?: StatusPedido;
       itens: {
         produto_id: string;
@@ -96,12 +96,9 @@ export const useCreateOrder = () => {
         valor_desconto: orderData.valor_desconto,
         valor_total: orderData.valor_total,
         forma_pagamento: orderData.forma_pagamento,
+        tipo_frete: orderData.tipo_frete,
         status: orderData.status || 'pendente',
       };
-
-      if (orderData.metodo_envio) {
-        orderPayload.metodo_envio = orderData.metodo_envio;
-      }
 
       const { data: order, error: orderError } = await supabase
         .from('pedidos')

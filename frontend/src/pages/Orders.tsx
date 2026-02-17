@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, Search, ChevronRight, MapPin, CreditCard, Calendar, Hash, ReceiptText, Truck, Tag, User, Mail, Phone, Fingerprint } from 'lucide-react';
+import { Package, Search, ChevronRight, MapPin, CreditCard, Calendar, Hash, ReceiptText, Truck, Tag, User, Mail, Phone, Fingerprint, Copy, Check, FileText, ExternalLink } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -393,7 +393,7 @@ const Orders = () => {
                   <div className="p-3 md:p-4 bg-muted/30 rounded-xl border border-border/100 space-y-2 md:space-y-3">
                     <div className="flex justify-between items-center text-[10px] md:text-xs">
                       <span className="text-muted-foreground font-medium">Serviço de Entrega</span>
-                      <span className="font-bold text-foreground">{selectedOrder.metodo_envio || 'Correios / Transportadora'}</span>
+                      <span className="font-bold text-foreground">{selectedOrder.tipo_frete || 'Correios / Transportadora'}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] md:text-xs">
                       <span className="text-muted-foreground font-medium">Valor do Frete</span>
@@ -408,40 +408,57 @@ const Orders = () => {
                       {isAdmin ? (
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
-                            <Input
-                              placeholder="Inserir código..."
-                              className="h-8 text-xs font-mono uppercase"
-                              defaultValue={selectedOrder.codigo_rastreio || ''}
-                              onKeyDown={async (e) => {
-                                if (e.key === 'Enter') {
-                                  const code = e.currentTarget.value;
-                                  if (!code) return;
-                                  try {
-                                    const apiUrl = import.meta.env.VITE_API_URL;
-                                    const response = await fetch(`${apiUrl}/api/pedidos/${selectedOrder.id}/rastreio`, {
-                                      method: 'PATCH',
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                        'x-user-id': user?.id || ''
-                                      },
-                                      body: JSON.stringify({ codigo_rastreio: code })
-                                    });
-                                    if (response.ok) {
-                                      toast.success('Rastreio atualizado!');
-                                      // Atualizar estado local
-                                      setSelectedOrder({ ...selectedOrder, codigo_rastreio: code, status: 'enviado' });
-                                    } else {
-                                      toast.error('Erro ao atualizar rastreio');
-                                    }
-                                  } catch (err) {
-                                    toast.error('Erro de conexão');
+                            <div className="relative flex-1">
+                              <Input
+                                placeholder="Inserir código..."
+                                className="h-9 text-sm pl-3 pr-10"
+                                defaultValue={selectedOrder.codigo_rastreio || ''}
+                                onKeyDown={async (e) => {
+                                  if (e.key === 'Enter') {
+                                    const code = e.currentTarget.value;
+                                    if (!code) return;
+
+                                    // Trigger button click logic or duplicate logic here
+                                    // Ideally extract to function, but for now inline is fine for this context
+                                    const btn = document.getElementById('save-tracking-btn');
+                                    if (btn) btn.click();
                                   }
+                                }}
+                                id="tracking-input"
+                              />
+                            </div>
+                            <button
+                              id="save-tracking-btn"
+                              onClick={async () => {
+                                const input = document.getElementById('tracking-input') as HTMLInputElement;
+                                const code = input?.value;
+                                if (!code) return;
+
+                                try {
+                                  const apiUrl = import.meta.env.VITE_API_URL;
+                                  const response = await fetch(`${apiUrl}/api/pedidos/${selectedOrder.id}/rastreio`, {
+                                    method: 'PATCH',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'x-user-id': user?.id || ''
+                                    },
+                                    body: JSON.stringify({ codigo_rastreio: code })
+                                  });
+                                  if (response.ok) {
+                                    toast.success('Rastreio salvo!');
+                                    setSelectedOrder({ ...selectedOrder, codigo_rastreio: code, status: 'enviado' });
+                                  } else {
+                                    toast.error('Erro ao salvar');
+                                  }
+                                } catch (err) {
+                                  toast.error('Erro de conexão');
                                 }
                               }}
-                            />
-                            <button className="text-[10px] font-bold text-primary uppercase" onClick={() => toast.info('Pressione ENTER para salvar')}>Salvar</button>
+                              className="h-9 px-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-bold text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                            >
+                              <Check className="w-3.5 h-3.5" /> Salvar
+                            </button>
                           </div>
-                          {selectedOrder.codigo_rastreio && <p className="text-[9px] text-muted-foreground">Atual: {selectedOrder.codigo_rastreio}</p>}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
@@ -472,39 +489,65 @@ const Orders = () => {
                   <h4 className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 md:mb-3 flex items-center gap-2">
                     <ReceiptText className="w-2.5 h-2.5 md:w-3 md:h-3" /> Nota Fiscal Eletrônica
                   </h4>
-                  <div className="p-3 md:p-4 bg-muted/30 rounded-xl border border-border/100 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-[8px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Chave de Acesso</p>
-                        <p className="text-[10px] md:text-xs font-mono text-foreground break-all">
-                          {selectedOrder.nfe_key || <span className="text-muted-foreground italic">Aguardando emissão</span>}
-                        </p>
+                  <div className="p-3 md:p-4 bg-muted/30 rounded-xl border border-border/100 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="w-full">
+                        <p className="text-[8px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-tighter mb-1">Chave de Acesso</p>
+                        <div className="flex items-center gap-2 bg-background border border-border rounded-md p-2">
+                          <code className="text-[10px] md:text-xs font-mono text-foreground break-all flex-1">
+                            {selectedOrder.nfe_key || <span className="text-muted-foreground italic font-sans">Aguardando emissão</span>}
+                          </code>
+                          {selectedOrder.nfe_key && (
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(selectedOrder.nfe_key);
+                                toast.success('Chave copiada!');
+                              }}
+                              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary transition-colors"
+                              title="Copiar chave"
+                            >
+                              <Copy className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    {selectedOrder.nfe_link ? (
-                      <a
-                        href={selectedOrder.nfe_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full py-2 bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors"
-                      >
-                        <ReceiptText className="w-3 h-3" /> Visualizar DANFE / Nota
-                      </a>
-                    ) : selectedOrder.nfe_key ? (
-                      <button
-                        onClick={() => {
-                          window.open(`https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${selectedOrder.nfe_key}`, '_blank');
-                        }}
-                        className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors"
-                      >
-                        <Search className="w-3 h-3" /> Consultar na SEFAZ
-                      </button>
-                    ) : (
-                      <div className="w-full py-2 bg-muted/50 text-muted-foreground rounded-md text-[10px] md:text-xs font-bold uppercase tracking-widest text-center cursor-not-allowed">
-                        Nota Fiscal Indisponível
-                      </div>
-                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedOrder.nfe_link ? (
+                        <a
+                          href={selectedOrder.nfe_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="col-span-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span className="truncate">Visualizar DANFE</span>
+                        </a>
+                      ) : (
+                        <div className="col-span-1 flex items-center justify-center gap-2 py-2.5 bg-muted text-muted-foreground rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50 cursor-not-allowed border border-border">
+                          <FileText className="w-3.5 h-3.5" />
+                          <span className="truncate">DANFE Indisp.</span>
+                        </div>
+                      )}
+
+                      {selectedOrder.nfe_key ? (
+                        <button
+                          onClick={() => {
+                            window.open(`https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${selectedOrder.nfe_key}`, '_blank');
+                          }}
+                          className="col-span-1 flex items-center justify-center gap-2 py-2.5 bg-primary/90 text-white rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest shadow-sm active:scale-95"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span className="truncate">Consultar SEFAZ</span>
+                        </button>
+                      ) : (
+                        <div className="col-span-1 flex items-center justify-center gap-2 py-2.5 bg-muted text-muted-foreground rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest opacity-50 cursor-not-allowed border border-border">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span className="truncate">SEFAZ Indisp.</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

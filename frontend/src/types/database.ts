@@ -138,7 +138,7 @@ export interface Pedido {
   valor_desconto: number;
   valor_total: number;
   forma_pagamento: string | null;
-  metodo_envio?: string | null;
+  tipo_frete?: string | null;
   parcelas: number;
   codigo_rastreio: string | null;
   cupom_id: string | null;

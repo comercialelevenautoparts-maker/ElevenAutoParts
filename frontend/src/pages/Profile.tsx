@@ -181,28 +181,29 @@ const Profile = () => {
               <Button onClick={handleSave} variant="outline" className="mt-6 border-primary text-primary hover:bg-primary/5 h-10 md:h-11 rounded-xl px-8 font-bold text-xs uppercase tracking-widest transition-all">Salvar Alterações</Button>
             </div>
 
-            <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
-              <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">Alterar a senha</h2>
-              <div className="space-y-3 md:space-y-4 max-w-md">
-                <div className="space-y-1.5">
-                  <Label className="text-xs md:text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">Senha atual</Label>
-                  <Input type="password" placeholder="••••••••" className="h-10 md:h-11 rounded-lg" />
+            {user?.app_metadata?.provider === 'email' && (
+              <div className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm">
+                <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">Alterar a senha</h2>
+                <div className="space-y-3 md:space-y-4 max-w-md">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs md:text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">Senha atual</Label>
+                    <Input type="password" placeholder="••••••••" className="h-10 md:h-11 rounded-lg" />
+                  </div>
+                  <div className="relative space-y-1.5">
+                    <Label className="text-xs md:text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">Nova senha</Label>
+                    <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" className="h-10 md:h-11 rounded-lg pr-12" />
+                    <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8.5 text-muted-foreground hover:text-foreground p-1 transition-colors">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs md:text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">Confirmar nova senha</Label>
+                    <Input type="password" placeholder="••••••••" className="h-10 md:h-11 rounded-lg" />
+                  </div>
                 </div>
-                <div className="relative space-y-1.5">
-                  <Label className="text-xs md:text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">Nova senha</Label>
-                  <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" className="h-10 md:h-11 rounded-lg pr-12" />
-                  <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8.5 text-muted-foreground hover:text-foreground p-1 transition-colors">
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs md:text-sm font-semibold uppercase tracking-wider text-muted-foreground/80">Confirmar nova senha</Label>
-                  <Input type="password" placeholder="••••••••" className="h-10 md:h-11 rounded-lg" />
-                </div>
+                <Button className="btn-primary mt-6 h-10 md:h-11 rounded-xl px-8 font-bold text-xs uppercase tracking-widest">Atualizar Senha</Button>
               </div>
-              <Button className="btn-primary mt-6 h-10 md:h-11 rounded-xl px-8 font-bold text-xs uppercase tracking-widest">Atualizar Senha</Button>
-            </div>
-          </div>
+            )}          </div>
         </div>
       </main>
       <Footer />

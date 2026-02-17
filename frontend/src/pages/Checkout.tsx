@@ -289,6 +289,7 @@ const Checkout = () => {
       valor_total: finalTotal,
       forma_pagamento: formaPagamento || paymentMethod,
       status: status as StatusPedido,
+      tipo_frete: selectedShippingOption?.name || 'Transportadora',
       itens: items.map(item => ({
         produto_id: item.id,
         nome_produto: item.name,
