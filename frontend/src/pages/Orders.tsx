@@ -24,7 +24,7 @@ const Orders = () => {
   const [activeTab, setActiveTab] = useState<'concluidos' | 'em_analise' | 'cancelados'>(location.state?.tab || 'concluidos');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const { data: orders, isLoading } = useOrders();
   const { addToCart } = useCart();
   const navigate = useNavigate();
@@ -401,27 +401,110 @@ const Orders = () => {
                         {selectedOrder.valor_frete > 0 ? `R$ ${selectedOrder.valor_frete.toFixed(2)}` : 'Grátis'}
                       </span>
                     </div>
+                    {/* Tracking Code Section */}
                     <div className="pt-1.5 md:pt-2 border-t border-border/50">
                       <p className="text-[8px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-tighter mb-0.5 md:mb-1">Código de Rastreio</p>
-                      <div className="flex items-center gap-2">
-                        {selectedOrder.codigo_rastreio ? (
-                          <>
-                            <p className="text-xs md:text-sm font-mono font-bold text-primary">{selectedOrder.codigo_rastreio}</p>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(selectedOrder.codigo_rastreio);
-                                toast.success('Código copiado!');
+
+                      {isAdmin ? (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Inserir código..."
+                              className="h-8 text-xs font-mono uppercase"
+                              defaultValue={selectedOrder.codigo_rastreio || ''}
+                              onKeyDown={async (e) => {
+                                if (e.key === 'Enter') {
+                                  const code = e.currentTarget.value;
+                                  if (!code) return;
+                                  try {
+                                    const apiUrl = import.meta.env.VITE_API_URL;
+                                    const response = await fetch(`${apiUrl}/api/pedidos/${selectedOrder.id}/rastreio`, {
+                                      method: 'PATCH',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        'x-user-id': user?.id || ''
+                                      },
+                                      body: JSON.stringify({ codigo_rastreio: code })
+                                    });
+                                    if (response.ok) {
+                                      toast.success('Rastreio atualizado!');
+                                      // Atualizar estado local
+                                      setSelectedOrder({ ...selectedOrder, codigo_rastreio: code, status: 'enviado' });
+                                    } else {
+                                      toast.error('Erro ao atualizar rastreio');
+                                    }
+                                  } catch (err) {
+                                    toast.error('Erro de conexão');
+                                  }
+                                }
                               }}
-                              className="p-1 hover:bg-primary/10 rounded transition-colors"
-                            >
-                              <Search className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" />
-                            </button>
-                          </>
-                        ) : (
-                          <p className="text-[10px] md:text-xs text-muted-foreground italic">Aguardando postagem do pedido</p>
-                        )}
+                            />
+                            <button className="text-[10px] font-bold text-primary uppercase" onClick={() => toast.info('Pressione ENTER para salvar')}>Salvar</button>
+                          </div>
+                          {selectedOrder.codigo_rastreio && <p className="text-[9px] text-muted-foreground">Atual: {selectedOrder.codigo_rastreio}</p>}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          {selectedOrder.codigo_rastreio ? (
+                            <>
+                              <p className="text-xs md:text-sm font-mono font-bold text-primary">{selectedOrder.codigo_rastreio}</p>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(selectedOrder.codigo_rastreio);
+                                  toast.success('Código copiado!');
+                                }}
+                                className="p-1 hover:bg-primary/10 rounded transition-colors"
+                              >
+                                <Search className="w-2.5 h-2.5 md:w-3 md:h-3 text-primary" />
+                              </button>
+                            </>
+                          ) : (
+                            <p className="text-[10px] md:text-xs text-muted-foreground italic">Aguardando postagem do pedido</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Nota Fiscal Section */}
+                <div>
+                  <h4 className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 md:mb-3 flex items-center gap-2">
+                    <ReceiptText className="w-2.5 h-2.5 md:w-3 md:h-3" /> Nota Fiscal Eletrônica
+                  </h4>
+                  <div className="p-3 md:p-4 bg-muted/30 rounded-xl border border-border/100 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-[8px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">Chave de Acesso</p>
+                        <p className="text-[10px] md:text-xs font-mono text-foreground break-all">
+                          {selectedOrder.nfe_key || <span className="text-muted-foreground italic">Aguardando emissão</span>}
+                        </p>
                       </div>
                     </div>
+
+                    {selectedOrder.nfe_link ? (
+                      <a
+                        href={selectedOrder.nfe_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full py-2 bg-emerald-600/10 text-emerald-600 hover:bg-emerald-600/20 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors"
+                      >
+                        <ReceiptText className="w-3 h-3" /> Visualizar DANFE / Nota
+                      </a>
+                    ) : selectedOrder.nfe_key ? (
+                      <button
+                        onClick={() => {
+                          window.open(`https://www.nfe.fazenda.gov.br/portal/consultaRecaptcha.aspx?tipoConsulta=completa&tipoConteudo=XbSeqxE8pl8=&nfe=${selectedOrder.nfe_key}`, '_blank');
+                        }}
+                        className="flex items-center justify-center gap-2 w-full py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors"
+                      >
+                        <Search className="w-3 h-3" /> Consultar na SEFAZ
+                      </button>
+                    ) : (
+                      <div className="w-full py-2 bg-muted/50 text-muted-foreground rounded-md text-[10px] md:text-xs font-bold uppercase tracking-widest text-center cursor-not-allowed">
+                        Nota Fiscal Indisponível
+                      </div>
+                    )}
                   </div>
                 </div>
 
