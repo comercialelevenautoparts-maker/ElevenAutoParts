@@ -263,51 +263,72 @@ class BlingService {
         }
     }
 
-    async emitirNFe(blingOrderId) {
+    async emitirNFe(internalOrderId, blingOrderId) {
         try {
-            console.log(`📡 Solicitando emissão de NF-e para o Pedido Bling: ${blingOrderId}`);
+            console.log(`📡 Solicitando emissão de NF-e para o Pedido Bling: ${blingOrderId} (Interno: ${internalOrderId})`);
             const token = await this.getAccessToken();
 
-            // Endpoint V3 para gerar NF-e a partir de um pedido de venda
+            // 1. Gerar a Nota a partir do Pedido de Venda
+            // Na API v3, este endpoint pode ser 'pedidos/vendas/:id/gerar-nfe' ou similar. 
+            // Vamos assumir que funciona e focar na captura do retorno.
             const response = await axios.post(`${BLING_API_URL}/pedidos/vendas/${blingOrderId}/gerar-nfe`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             const nfeId = response.data?.data?.id;
+            console.log(`✅ NF-e gerada com sucesso! ID da Nota: ${nfeId}`);
 
-            // Tentar obter o link ou chave da nota para atualizar no banco
+            // 2. Buscar detalhes da Nota Fiscal Gerada para obter Chave e Link
             try {
-                const nfeDetail = await axios.get(`${BLING_API_URL}/notas/fiscais/${nfeId}`, {
+                // Aguardar um pouco para o Bling processar (opcional, mas recomendado em sistemas assíncronos)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                const nfeDetail = await axios.get(`${BLING_API_URL}/nfe/${nfeId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
                 const nfeData = nfeDetail.data?.data;
-                if (nfeData) {
-                    await supabase
-                        .from('pedidos')
-                        .update({
-                            nfe_status: 'nota_emitida',
-                            nfe_key: nfeData.chaveAcesso || nfeData.numero,
-                            nfe_link: nfeData.linkDanfe || null
-                        })
-                        .filter('nfe_key', 'eq', String(blingOrderId));
-                }
-            } catch (e) {
-                console.warn('⚠️ Nota gerada mas erro ao buscar detalhes extras:', e.message);
+                console.log('📄 Detalhes da Nota Fiscal recebidos:', JSON.stringify(nfeData, null, 2));
+
+                // Mapeamento de campos baseado na resposta comum da V3
+                const chaveAcesso = nfeData.chaveAcesso || nfeData.chave_acesso || nfeData.notaFiscal?.chaveAcesso;
+                const linkDanfe = nfeData.linkDanfe || nfeData.link_danfe || nfeData.transporte?.linkDanfe || nfeData.retorno?.linkDanfe;
+                const statusNota = nfeData.situacao?.valor || 'emitida';
+
+                await supabase
+                    .from('pedidos')
+                    .update({
+                        nfe_status: `nota_${statusNota}`, // Ex: nota_emitida, nota_autorizada
+                        nfe_key: chaveAcesso,
+                        nfe_link: linkDanfe,
+                        updated_at: new Date()
+                    })
+                    .eq('id', internalOrderId); // Usar ID interno para update seguro
+
+                console.log(`💾 Pedido ${internalOrderId} atualizado com Chave: ${chaveAcesso} e Link: ${linkDanfe ? 'Sim' : 'Não'}`);
+
+            } catch (detailError) {
+                console.warn('⚠️ Nota gerada, mas erro ao buscar detalhes extras (Link/Chave):', detailError.message);
+                // Fallback: Atualizar status para indicar que foi gerada, mesmo sem detalhes
+                await supabase
+                    .from('pedidos')
+                    .update({ nfe_status: 'nota_gerada_sem_detalhes' })
+                    .eq('id', internalOrderId);
             }
 
-            console.log(`✅ NF-e gerada com sucesso! ID: ${nfeId}`);
+            return { success: true, nfeId };
 
-            return {
-                success: true,
-                nfeId: nfeId,
-                message: 'NF-e gerada com sucesso.'
-            };
         } catch (error) {
-            console.error('❌ Erro ao emitir NF-e no Bling:', error.response?.data || error.message);
+            console.error('❌ Erro ao emitir NF-e:', error.response?.data || error.message);
+            await supabase
+                .from('pedidos')
+                .update({ nfe_status: 'erro_emissao_nfe' })
+                .eq('id', internalOrderId);
             throw error;
         }
     }
+
+
 
     async getStatus() {
         try {

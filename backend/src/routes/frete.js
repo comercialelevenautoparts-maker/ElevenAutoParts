@@ -137,7 +137,7 @@ router.get('/tracking/:code', async (req, res) => {
     console.log(`🔍 Buscando rastreio para o código: ${code}`);
 
     // TEST BYPASS: Se for um código de teste nosso, retorna mock formatado
-    if (code.startsWith('ELEVEN-TEST')) {
+    if (code.startsWith('ELEVEN-TEST') || code === 'AA123456789BR') {
         return res.json(getTestTrackingData(code));
     }
 
