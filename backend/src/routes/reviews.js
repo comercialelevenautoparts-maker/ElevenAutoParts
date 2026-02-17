@@ -28,18 +28,23 @@ router.get('/', async (req, res) => {
         }
 
         const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews&key=${apiKey}&language=pt-BR`;
+        console.log(`📡 Solicitando reviews ao Google para o PlaceID: ${placeId}`);
 
-        // Chamada ao Google limpando qualquer header de Referer que possa travar a API
+        // Chamada ao Google limpando qualquer header de Referer que possa travar a API e adicionando User-Agent
         const googleResponse = await axios.get(googleUrl, {
-            headers: { 'Referer': '' }
+            headers: {
+                'Referer': '',
+                'User-Agent': 'ElevenAutoParts/1.0'
+            }
         });
 
         if (googleResponse.data.status !== 'OK') {
-            console.error('Erro Google API:', googleResponse.data.status, googleResponse.data.error_message);
+            console.error('❌ Erro Google API Status:', googleResponse.data.status);
+            console.error('❌ Erro Google API Mensagem:', googleResponse.data.error_message);
 
             // Se o Google falhar por motivo de restrição mas tivermos cache (mesmo antigo), usamos o cache
             if (cachedReviews) {
-                console.log('Usando cache antigo devido a erro na API do Google.');
+                console.log('📦 Usando cache antigo devido a erro na API do Google.');
                 return res.json(cachedReviews);
             }
 
