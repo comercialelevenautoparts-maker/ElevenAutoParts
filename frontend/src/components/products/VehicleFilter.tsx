@@ -128,10 +128,10 @@ export const VehicleFilter = () => {
         <div className="bg-muted rounded-2xl p-6 relative">
             <div className="mb-6">
                 <h3 className="text-xl font-bold text-foreground">
-                    Encontre o produto ideal
+                    Descubra o modelo certo para seu veículo
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                    Selecione seu veículo para buscar a peça compatível
+                    Selecione seu carro e encontre o modelo exato em segundos.
                 </p>
             </div>
 
@@ -339,14 +339,7 @@ export const VehicleFilter = () => {
                     <div className="flex flex-col gap-4">
                         {/* Kit Visual Representation */}
                         <div className="flex gap-4 items-center justify-center bg-muted/30 p-4 rounded-lg">
-                            <div className="relative group">
-                                <img
-                                    src={palhetaImg}
-                                    alt="Palheta Premium"
-                                    className="h-24 w-auto object-contain transition-transform group-hover:scale-105"
-                                />
-                            </div>
-                            <span className="text-xl text-primary font-light">+</span>
+                            {/* Conector (Esquerda) */}
                             <div className="relative group">
                                 {compatibilidade.imagem_conector ? (
                                     <img
@@ -358,6 +351,25 @@ export const VehicleFilter = () => {
                                     <div className="h-20 w-20 flex items-center justify-center bg-muted rounded border border-dashed text-xs text-muted-foreground">
                                         {compatibilidade.conector}
                                     </div>
+                                )}
+                            </div>
+
+                            <span className="text-[50px] text-primary font-light">=</span>
+
+                            {/* Braço (Direita) */}
+                            <div className="relative group">
+                                {compatibilidade.imagem_braco ? (
+                                    <img
+                                        src={compatibilidade.imagem_braco}
+                                        alt="Braço do Limpador"
+                                        className="h-24 w-auto object-contain transition-transform group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <img
+                                        src={palhetaImg}
+                                        alt="Palheta Premium"
+                                        className="h-24 w-auto object-contain transition-transform group-hover:scale-105"
+                                    />
                                 )}
                             </div>
                         </div>

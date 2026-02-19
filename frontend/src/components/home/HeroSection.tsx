@@ -17,11 +17,14 @@ const HeroSection = () => {
         <div className="space-y-6">
           <div className="text-center lg:text-left">
             <h1 className="text-3xl md:text-[52px] lg:text-[clamp(18px,2.8vw,46px)] font-extrabold text-foreground leading-[1.1] lg:leading-tight tracking-tighter uppercase">
-              <span className="block whitespace-nowrap">ELEVE SEU CARRO COM </span>
-              <span className="text-primary block whitespace-nowrap">ELEVEN AUTO PARTS</span>
+              <span className="block whitespace-nowrap">ELEVE O NÍVEL </span>
+              <span className="text-primary block whitespace-nowrap">DA SUA VISIBILIDADE.</span>
             </h1>
             <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-lg mx-auto lg:mx-0">
-              Explore o mundo das peças automotivas na AutoParts, onde qualidade encontra preço justo. Descubra as melhores palhetas, acessórios e peças com promoções exclusivas.
+              Conheça a Palheta Ecoflex com sistema de refil inteligente. <br /><br />
+              Economize, reduza o descarte e mantenha sua segurança em qualquer clima.
+              Tecnologia que dura mais. Escolha inteligente para quem pensa no futuro.
+
             </p>
           </div>
 
@@ -41,22 +44,24 @@ const HeroSection = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-6 pt-6 border-t border-border text-center lg:text-left">
-            <div>
-              <div className="text-xl md:text-3xl font-bold text-foreground">MAIS DE 1000</div>
-              <p className="text-xs md:text-sm text-muted-foreground">Clientes que já foram atendidos</p>
-            </div>
-            <div>
-              <div className="text-xl md:text-3xl font-bold text-foreground">99%</div>
-              <p className="text-xs md:text-sm text-muted-foreground">Taxa de Satisfação do Cliente</p>
-            </div>
-            <div>
-              <div className="text-xl md:text-3xl font-bold text-foreground">24/7</div>
-              <p className="text-xs md:text-sm text-muted-foreground">Conveniência nas compras</p>
-            </div>
-            <div>
-              <div className="text-xl md:text-3xl font-bold text-foreground">30 DIAS</div>
-              <p className="text-xs md:text-sm text-muted-foreground">Devolução sem complicações</p>
+          <div className="pt-6 border-t border-border">
+            <div className="flex flex-wrap justify-center gap-x-10 gap-y-8 lg:grid lg:grid-cols-2 lg:gap-x-4 lg:gap-y-8 lg:max-w-none lg:mx-0">
+              <div className="flex flex-col items-center lg:items-start text-center lg:text-left min-w-[140px]">
+                <div className="text-xl md:text-3xl font-bold text-foreground">+ 1000</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Motoristas atendidos</p>
+              </div>
+              <div className="flex flex-col items-center lg:items-start text-center lg:text-left min-w-[140px]">
+                <div className="text-xl md:text-3xl font-bold text-foreground">99%</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Recomendam nossos produtos</p>
+              </div>
+              <div className="flex flex-col items-center lg:items-start text-center lg:text-left min-w-[140px]">
+                <div className="text-xl md:text-3xl font-bold text-foreground">Praticidade</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Troca simples e rápida</p>
+              </div>
+              <div className="flex flex-col items-center lg:items-start text-center lg:text-left min-w-[140px]">
+                <div className="text-xl md:text-3xl font-bold text-foreground">Sustentabilidade</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Sistema Sustentável com Refil</p>
+              </div>
             </div>
           </div>
         </div>

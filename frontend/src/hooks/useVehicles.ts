@@ -11,6 +11,7 @@ export interface VeiculoCompativel {
   tamanho_motorista: string;
   tamanho_passageiro: string | null;
   imagem_conector?: string;
+  imagem_braco?: string;
 }
 
 export const useMarcas = () => {
@@ -121,18 +122,19 @@ export const useCompatibilidade = (marca: string, modelo: string, ano: number) =
 
       if (veiculoError) throw veiculoError;
 
-      // Fetch connector image using the code
+      // Fetch connector and arm images using the code
       if (veiculoData && veiculoData.conector) {
         const { data: conectorData } = await (supabase as any)
           .from('conectores')
-          .select('imagem_url')
+          .select('imagem_url, imagem_braco')
           .eq('codigo', veiculoData.conector)
           .single();
 
         if (conectorData) {
           return {
             ...veiculoData,
-            imagem_conector: conectorData.imagem_url
+            imagem_conector: conectorData.imagem_url,
+            imagem_braco: conectorData.imagem_braco
           } as VeiculoCompativel;
         }
       }

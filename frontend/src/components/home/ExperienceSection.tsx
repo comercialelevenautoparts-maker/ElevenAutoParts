@@ -4,33 +4,33 @@ import experienceBg from '@/assets/experience-bg.jpg';
 const features = [
   {
     icon: Shield,
-    title: 'Qualidade em Cada Peça',
-    description: 'Trabalhamos com marcas líderes no setor de auto peças, garantindo a qualidade, durabilidade e a originalidade de todo nosso catálogo.',
+    title: 'Tecnologia Aerodinâmica Ecoflex',
+    description: 'Desenvolvida para máxima eficiência e limpeza silenciosa.',
   },
   {
     icon: Headphones,
-    title: 'Atendimento Personalizado',
-    description: 'Nossa equipe está pronta no centro de São Paulo, atendendo pessoas de norte a sul do país de maneira rápida e precisa.',
+    title: 'Especialistas em Limpadores Automotivos',
+    description: 'Atendimento técnico para indicar o modelo ideal para seu carro.',
   },
   {
     icon: Layers,
-    title: 'Compatibilidade Inteligente',
-    description: 'Site de vender, acessar o veículo e te mostrar um catálogo exibindo todas as peças de Limpador, filtros e lubrificantes para seu veículo.',
+    title: 'Busca Inteligente por Veículo',
+    description: 'Encontre rapidamente a medida e o conector correto para seu carro.',
   },
   {
     icon: Truck,
-    title: 'Entrega Rápida e Precisa',
-    description: 'Mais do que uma loja, somos especialistas em logística com entrega expressa e rastreamento. Você acompanha sua encomenda em tempo real por todo o Brasil.',
+    title: 'Entrega Rápida',
+    description: 'Envio rápido para todo o Brasil com rastreamento.',
   },
   {
     icon: Globe,
-    title: 'Catálogo Global',
-    description: 'Acesso a um inventário extenso com Limpadores da Ásia, Exportamos para mais de 10 países com marcas conhecidas e confiáveis.',
+    title: 'Durabilidade Superior',
+    description: 'Desenvolvida com materiais de alta resistência e desempenho constante, garantindo mais tempo de uso antes da troca.',
   },
   {
     icon: Leaf,
-    title: 'Compromisso com Sustentabilidade',
-    description: 'A Eleven Auto Parts apoia práticas ecológicas, com embalagens recicláveis e parcerias com fornecedores responsáveis e conscientes.',
+    title: 'Sistema com Troca de Refil',
+    description: 'Menos descarte plástico a cada substituição.',
   },
 ];
 
@@ -53,11 +53,13 @@ const ExperienceSection = () => {
               <h2 className="font-medium text-primary text-[clamp(16px,5vw,24px)] lg:text-4xl lg:order-1">ELEVEN AUTO PARTS</h2>
             </div>
             <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-              Na Eleven Auto Parts, somos movidos pela paixão por automóveis e pelo compromisso com nosso atendimento,
-              nossa jornada só está completa quando você é atendido bem. Com uma curadoria de peças
-              automotivas de alta qualidade e um atendimento que coloca você no centro, trazemos a experiência
-              completa. Conheça o que você precisa na hora de cuidar do seu limpador com confiança e excelência –
-              juntos criamos para acelerar sua experiência em autopeças com Eleven – pois a cada detalhamento do seu carro com a importância.
+              Inovação que eleva o padrão das palhetas automotivas.
+
+              Na Eleven, acreditamos que segurança e economia podem caminhar juntas.
+              Por isso desenvolvemos o sistema Ecoflex: uma solução inteligente que permite a troca apenas do refil, reduzindo desperdício e aumentando a durabilidade.
+
+              Não vendemos apenas palhetas.
+              Oferecemos tecnologia, compatibilidade precisa e uma escolha mais consciente para o seu veículo.
             </p>
           </div>
         </div>

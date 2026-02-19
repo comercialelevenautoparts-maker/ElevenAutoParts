@@ -3,7 +3,8 @@
  * Tabela correta: 'produtos' (português)
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface StripeProduct {
@@ -29,6 +30,28 @@ export interface StripeProduct {
  * Busca todos os produtos ativos com Stripe configurado
  */
 export function useStripeProducts(category?: string) {
+    const queryClient = useQueryClient();
+
+    // Listener de tempo real para a tabela 'produtos'
+    useEffect(() => {
+        const channel = supabase
+            .channel('public:produtos')
+            .on(
+                'postgres_changes',
+                { event: '*', table: 'produtos', schema: 'public' },
+                () => {
+                    console.log('🔄 Mudança detectada na tabela produtos! Atualizando cache...');
+                    queryClient.invalidateQueries({ queryKey: ['stripe-products'] });
+                    queryClient.invalidateQueries({ queryKey: ['stripe-product'] });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [queryClient]);
+
     return useQuery({
         queryKey: ['stripe-products', category],
         queryFn: async () => {
