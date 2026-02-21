@@ -206,7 +206,7 @@ const Footer = () => {
             <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8 md:w-10 md:h-10">
               <FontAwesomeIcon icon={faFacebook} className="w-3 h-3 md:w-4 md:h-4" />
             </a>
-            <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8 md:w-10 md:h-10">
+            <a href="https://www.instagram.com/eleven.autoparts?igsh=cXJ5cjAweXhqbHk%3D" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8 md:w-10 md:h-10">
               <FontAwesomeIcon icon={faInstagram} className="w-3 h-3 md:w-4 md:h-4" />
             </a>
             <a href="#" className="icon-button bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8 md:w-10 md:h-10">

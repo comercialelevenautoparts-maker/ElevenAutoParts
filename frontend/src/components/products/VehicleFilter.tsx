@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, X, ShieldCheck, MapPin } from 'lucide-react';
 import { useMarcas, useModelos, useAnos, useCompatibilidade } from '@/hooks/useVehicles';
 import palhetaImg from '@/assets/palheta.png';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 
 export const VehicleFilter = () => {
     // Vehicle filter states
@@ -32,6 +33,16 @@ export const VehicleFilter = () => {
         selectedModelo,
         selectedAno || 0
     );
+
+    // Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Open modal when compatibility is found
+    useEffect(() => {
+        if (compatibilidade && selectedMarca && selectedModelo && selectedAno) {
+            setIsModalOpen(true);
+        }
+    }, [compatibilidade, selectedMarca, selectedModelo, selectedAno]);
 
     // Fetch base product for cart
     useEffect(() => {
@@ -122,6 +133,8 @@ export const VehicleFilter = () => {
             title: "Kit adicionado ao carrinho!",
             description: `Kit para ${selectedMarca} ${selectedModelo} adicionado com sucesso.`,
         });
+
+        setIsModalOpen(false);
     };
 
     return (
@@ -326,87 +339,128 @@ export const VehicleFilter = () => {
                 </div>
             </div>
 
-            {/* Compatibility Result */}
-            {compatibilidade && (
-                <div className="mt-6 p-5 bg-card border border-border rounded-xl shadow-lg animate-in fade-in zoom-in duration-300">
-                    <div className="flex items-center gap-2 mb-4 border-b border-border pb-3">
-                        <Check className="w-5 h-5 text-primary" />
-                        <h4 className="font-bold text-lg text-foreground">
-                            Kit compatível encontrado
-                        </h4>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        {/* Kit Visual Representation */}
-                        <div className="flex gap-4 items-center justify-center bg-muted/30 p-4 rounded-lg">
-                            {/* Conector (Esquerda) */}
-                            <div className="relative group">
-                                {compatibilidade.imagem_conector ? (
-                                    <img
-                                        src={compatibilidade.imagem_conector}
-                                        alt={`Conector ${compatibilidade.conector}`}
-                                        className="h-20 w-auto object-contain bg-white rounded p-1 shadow-sm transition-transform group-hover:scale-105"
-                                    />
-                                ) : (
-                                    <div className="h-20 w-20 flex items-center justify-center bg-muted rounded border border-dashed text-xs text-muted-foreground">
-                                        {compatibilidade.conector}
-                                    </div>
-                                )}
-                            </div>
-
-                            <span className="text-[50px] text-primary font-light">=</span>
-
-                            {/* Braço (Direita) */}
-                            <div className="relative group">
-                                {compatibilidade.imagem_braco ? (
-                                    <img
-                                        src={compatibilidade.imagem_braco}
-                                        alt="Braço do Limpador"
-                                        className="h-24 w-auto object-contain transition-transform group-hover:scale-105"
-                                    />
-                                ) : (
-                                    <img
-                                        src={palhetaImg}
-                                        alt="Palheta Premium"
-                                        className="h-24 w-auto object-contain transition-transform group-hover:scale-105"
-                                    />
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Kit Details */}
-                        <div>
-                            <h5 className="font-semibold text-foreground mb-2">
-                                Kit limpador para {selectedMarca} {selectedModelo} {selectedAno}
-                            </h5>
-                            <ul className="space-y-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                                <li className="flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                                    1x Palheta limpador para-brisa premium {compatibilidade.tamanho_motorista}" (Motorista)
-                                </li>
-                                {compatibilidade.tamanho_passageiro && (
-                                    <li className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                                        1x Palheta limpador para-brisa premium {compatibilidade.tamanho_passageiro}" (Passageiro)
-                                    </li>
-                                )}
-                                <li className="flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                                    1x Adaptador/conector específico ({compatibilidade.conector})
-                                </li>
-                            </ul>
-                        </div>
-
-                        {/* Action */}
+            {/* Premium Compatibility Modal */}
+            {isModalOpen && compatibilidade && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="w-full max-w-[92vw] sm:max-w-lg bg-card border border-border rounded-2xl shadow-2xl p-5 sm:p-8 text-center animate-in zoom-in-95 duration-500 relative overflow-y-auto max-h-[95vh]">
+                        {/* Close Button */}
                         <button
-                            className="w-full btn-primary py-3 font-semibold shadow-md active:scale-95 transition-all text-base flex justify-center items-center gap-2"
-                            onClick={handleAddToCart}
+                            onClick={() => setIsModalOpen(false)}
+                            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            Adicionar ao carrinho
+                            <X className="w-5 h-5 sm:w-6 sm:h-6" />
                         </button>
-                        <p className="text-xs text-center text-muted-foreground">
-                            Entrega garantida para todo o Brasil
+
+                        <div className="flex justify-center mb-4 sm:mb-6">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                                <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+                            </div>
+                        </div>
+
+                        <h3 className="text-lg sm:text-2xl font-black text-foreground mb-1 sm:mb-2 uppercase tracking-tight">
+                            KIT COMPATÍVEL ENCONTRADO!
+                        </h3>
+                        <p className="text-muted-foreground text-[10px] sm:text-sm mb-4 sm:mb-6 uppercase tracking-widest font-medium">
+                            {selectedMarca} {selectedModelo} ({selectedAno})
                         </p>
+
+                        {/* Kit Visual Representation */}
+                        <div className="flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8">
+                            <div className="flex items-center justify-center gap-4 sm:gap-6 bg-muted/30 p-4 sm:p-6 rounded-2xl border border-border/50">
+                                {/* Conector (Esquerda) */}
+                                <div className="flex flex-col items-center gap-1 sm:gap-2">
+                                    <div className="bg-white p-1.5 sm:p-2 rounded-xl shadow-sm border border-border/50">
+                                        {compatibilidade.imagem_conector ? (
+                                            <img
+                                                src={compatibilidade.imagem_conector}
+                                                alt={`Conector ${compatibilidade.conector}`}
+                                                className="h-16 sm:h-24 w-auto object-contain transition-transform hover:scale-110 duration-300"
+                                            />
+                                        ) : (
+                                            <div className="h-16 w-16 sm:h-24 sm:w-24 flex items-center justify-center bg-muted/10 rounded-lg border border-dashed text-[10px] text-muted-foreground font-bold">
+                                                {compatibilidade.conector}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Conector</span>
+                                </div>
+
+                                <div className="text-2xl sm:text-4xl text-primary font-light animate-pulse">=</div>
+
+                                {/* Braço (Direita) */}
+                                <div className="flex flex-col items-center gap-1 sm:gap-2">
+                                    <div className="bg-white/50 p-1.5 sm:p-2 rounded-xl">
+                                        {compatibilidade.imagem_braco ? (
+                                            <img
+                                                src={compatibilidade.imagem_braco}
+                                                alt="Braço do Limpador"
+                                                className="h-16 sm:h-28 w-auto object-contain transition-transform hover:scale-110 duration-300"
+                                            />
+                                        ) : (
+                                            <img
+                                                src={palhetaImg}
+                                                alt="Palheta Premium"
+                                                className="h-16 sm:h-28 w-auto object-contain transition-transform hover:scale-110 duration-300"
+                                            />
+                                        )}
+                                    </div>
+                                    <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Braço/Palheta</span>
+                                </div>
+                            </div>
+
+                            {/* Technical Details */}
+                            <div className="text-left bg-muted/20 p-3 sm:p-4 rounded-xl border border-border/30">
+                                <h4 className="text-[10px] sm:text-xs font-bold text-foreground mb-2 sm:mb-3 uppercase tracking-widest flex items-center gap-2">
+                                    <div className="w-1 h-3 bg-primary rounded-full" />
+                                    Especificações do Kit
+                                </h4>
+                                <ul className="space-y-1.5 sm:space-y-2.5 text-[11px] sm:text-sm">
+                                    <li className="flex items-center justify-between text-muted-foreground">
+                                        <span className="font-medium">Lado Motorista:</span>
+                                        <span className="font-bold text-foreground">{compatibilidade.tamanho_motorista}"</span>
+                                    </li>
+                                    {compatibilidade.tamanho_passageiro && (
+                                        <li className="flex items-center justify-between text-muted-foreground">
+                                            <span className="font-medium">Lado Passageiro:</span>
+                                            <span className="font-bold text-foreground">{compatibilidade.tamanho_passageiro}"</span>
+                                        </li>
+                                    )}
+                                    <li className="flex items-center justify-between text-muted-foreground">
+                                        <span className="font-medium">Tipo de Conexão:</span>
+                                        <span className="font-bold text-primary bg-primary/5 px-2 py-0.5 rounded text-[10px] sm:text-xs">{compatibilidade.conector}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col gap-2 sm:gap-3">
+                            <Button
+                                className="w-full h-12 sm:h-14 text-sm sm:text-base font-bold bg-primary hover:bg-primary/90 text-white transition-all transform hover:scale-[1.02] shadow-xl rounded-xl"
+                                onClick={handleAddToCart}
+                            >
+                                <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> ADICIONAR AO CARRINHO
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className="w-full h-9 sm:h-10 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground"
+                                onClick={() => setIsModalOpen(false)}
+                            >
+                                Continuar navegando
+                            </Button>
+                        </div>
+
+                        <div className="mt-6 flex items-center justify-center gap-4 text-[10px] text-muted-foreground font-bold uppercase tracking-tighter opacity-70">
+                            <div className="flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3 text-green-500" /> Original
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-primary" /> Envio Imediato
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Check className="w-3 h-3 text-blue-500" /> Garantia
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -60,7 +60,7 @@ const PaymentMethods = ({ className = "", compact = false }: PaymentMethodsProps
                 {/* Visa */}
                 <div className={`border border-border/60 rounded p-1 flex items-center justify-center bg-white shadow-sm hover:shadow-md transition-all flex-1 min-w-0 ${compact ? 'h-5 max-w-[40px]' : 'h-7 sm:h-8 sm:max-w-[48px]'}`}>
                     <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/320px-Visa_Inc._logo.svg.png"
+                        src="https://www.mobills.com.br/blog/wp-content/uploads/2022/06/logo-da-visa-bandeira-cartao.png"
                         alt="Visa"
                         className="w-full h-full object-contain"
                     />
