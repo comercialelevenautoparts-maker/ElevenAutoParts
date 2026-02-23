@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, Check, X, ShieldCheck, MapPin } from 'lucide-react';
+import { ChevronDown, Check, X, ShieldCheck, MapPin, AlertTriangle } from 'lucide-react';
 import { useMarcas, useModelos, useAnos, useCompatibilidade } from '@/hooks/useVehicles';
 import palhetaImg from '@/assets/palheta.png';
 import { useCart } from '@/hooks/useCart';
@@ -431,6 +431,11 @@ export const VehicleFilter = () => {
                                     </li>
                                 </ul>
                             </div>
+                        </div>
+
+                        <div className="text-[8.5px] sm:text-xs text-muted-foreground bg-primary/5 py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg border border-primary/20 mb-4 font-medium flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap overflow-hidden">
+                            <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-primary shrink-0" />
+                            <span className="truncate">Verifique se o braço compatível é o mesmo do seu veículo.</span>
                         </div>
 
                         {/* Actions */}
