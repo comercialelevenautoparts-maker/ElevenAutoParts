@@ -17,7 +17,7 @@ const HeroSection = () => {
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
-              ELEVE SEU CARRO COM <span className="text-primary"><br />ELEVEN AUTO PARTS</span>
+              ELEVE O NÍVEL <span className="text-primary"><br />DA SUA VISIBILIDADE.</span>
             </h1>
             <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-lg">
               Explore o mundo das peças automotivas na AutoParts, onde qualidade encontra preço justo. Descubra as melhores palhetas para limpeza, acessórios e peças de reposição com promoções exclusivas para manter seu veículo em perfeito estado.

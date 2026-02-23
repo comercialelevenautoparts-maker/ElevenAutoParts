@@ -45,7 +45,7 @@ const Products = () => {
                   <span className="section-subtitle">PRODUTOS</span>
                 </div>
                 <p className="text-muted-foreground">
-                  Explore as palhetas da AutoParts e escolha o melhor entre nossas mais de 45 peças automotivas – projetadas para todos os tipos de veículos, de hatchs compactos a pickups robustas, passando por SUVs, sedans e utilitários.
+                  Descubra a linha Ecoflex com sistema de troca de refil. Tecnologia, durabilidade e economia para seu veículo.
                 </p>
               </div>
             </div>
@@ -107,7 +107,7 @@ const Products = () => {
                 </h1>
               </div>
               <p className="text-muted-foreground max-w-lg">
-                Explore as palhetas da AutoParts e escolha o melhor entre nossas mais de 45 peças automotivas – projetadas para todos os tipos de veículos, de hatchs compactos a pickups robustas.
+                Descubra a linha Ecoflex com sistema de troca de refil. Tecnologia, durabilidade e economia para seu veículo.
               </p>
             </div>
 

@@ -53,11 +53,13 @@ const ExperienceSection = () => {
               <span className="section-subtitle">SOBRE NÓS</span>
             </div>
             <p className="text-sm md:text-base text-muted-foreground max-w-2xl">
-              Na Eleven Auto Parts, somos movidos pela paixão por automóveis e pelo compromisso com nosso atendimento,
-              nossa jornada só está completa quando você é atendido bem. Com uma curadoria de peças
-              automotivas de alta qualidade e um atendimento que coloca você no centro, trazemos a experiência
-              completa. Conheça o que você precisa na hora de cuidar do seu limpador com confiança e excelência –
-              juntos criamos para acelerar sua experiência em autopeças com Eleven – pois a cada detalhamento do seu carro com a importância.
+              Inovação que eleva o padrão das palhetas automotivas.
+
+              Na Eleven, acreditamos que segurança e economia podem caminhar juntas.
+              Por isso desenvolvemos o sistema Ecoflex: uma solução inteligente que permite a troca apenas do refil, reduzindo desperdício e aumentando a durabilidade.
+
+              Não vendemos apenas palhetas.
+              Oferecemos tecnologia, compatibilidade precisa e uma escolha mais consciente para o seu veículo.
             </p>
           </div>
         </div>

@@ -128,10 +128,10 @@ export const VehicleFilter = () => {
         <div className="bg-muted rounded-2xl p-6 relative">
             <div className="mb-6">
                 <h3 className="text-xl font-bold text-foreground">
-                    Encontre o produto ideal
+                    Descubra o modelo certo para seu veículo
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                    Selecione seu veículo para buscar a peça compatível
+                    Selecione seu carro e encontre o modelo exato em segundos.
                 </p>
             </div>
 

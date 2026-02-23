@@ -3,9 +3,10 @@ import { useCart } from '@/hooks/useCart';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { redirectToCheckout, formatPrice } from '@/lib/stripe/checkout';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface ProductCardProps {
+  key?: string | number;
   id: string;
   name: string;
   description: string;

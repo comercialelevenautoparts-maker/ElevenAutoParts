@@ -39,8 +39,7 @@ const ProductsSection = () => {
               <span className="section-subtitle">PRODUTOS</span>
             </div>
             <p className="text-muted-foreground max-w-2xl">
-              Explore nossa linha 4P1 Peças de Carro. Reúne peças originais e equivalentes de alta qualidade – Todos verificados por técnicos
-              do ramo de autopeças e acessórios.
+              Descubra a linha Ecoflex com sistema de troca de refil. Tecnologia, durabilidade e economia para seu veículo.
             </p>
           </div>
           <Link to="/produtos" className="btn-primary flex items-center gap-2 whitespace-nowrap">
@@ -73,8 +72,7 @@ const ProductsSection = () => {
             <span className="section-subtitle">PRODUTOS</span>
           </div>
           <p className="text-muted-foreground max-w-2xl">
-            Explore nossa linha 4P1 Peças de Carro. Reúne peças originais e equivalentes de alta qualidade – Todos verificados por técnicos
-            do ramo de autopeças e acessórios.
+            Descubra a linha Ecoflex com sistema de troca de refil. Tecnologia, durabilidade e economia para seu veículo.
           </p>
         </div>
         <Link to="/produtos" className="btn-primary flex items-center gap-2 whitespace-nowrap">
