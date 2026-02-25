@@ -1,40 +1,45 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Eleven Auto Parts</title>
-    <meta
-      name="description"
-      content="Eleven Auto Parts - Peças automotivas de alta qualidade. Palhetas, conectores, borrachas e acessórios para seu veículo com entrega rápida e garantia."
-    />
-    <meta
-      name="keywords"
-      content="peças automotivas, palhetas, limpador de parabrisa, conectores, auto parts, eleven"
-    />
-    <meta name="author" content="Eleven Auto Parts" />
 
-    <meta
-      property="og:title"
-      content="Eleven Auto Parts - Peças Automotivas de Qualidade"
-    />
-    <meta
-      property="og:description"
-      content="Explore o mundo das peças automotivas na Eleven Auto Parts, onde qualidade encontra preço justo."
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="/logo-eleven.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eleven Auto Parts</title>
+  <meta name="description"
+    content="Eleven Auto Parts - Peças automotivas de alta qualidade. Palhetas, conectores, borrachas e acessórios para seu veículo com entrega rápida e garantia." />
+  <meta name="keywords" content="peças automotivas, palhetas, limpador de parabrisa, conectores, auto parts, eleven" />
+  <meta name="author" content="Eleven Auto Parts" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@ElevenAutoParts" />
-    <meta name="twitter:image" content="/logo-eleven.png" />
+  <meta property="og:title" content="Eleven Auto Parts - Peças Automotivas de Qualidade" />
+  <meta property="og:description"
+    content="Explore o mundo das peças automotivas na Eleven Auto Parts, onde qualidade encontra preço justo." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/logo-eleven.png" />
 
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="canonical" href="https://elevenautoparts.com" />
-  </head>
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ElevenAutoParts" />
+  <meta name="twitter:image" content="/logo-eleven.png" />
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <link id="dynamic-favicon" rel="icon" href="/logo-eleven.png" />
+  <script>
+    (function () {
+      const link = document.getElementById('dynamic-favicon');
+      const updateFavicon = () => {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        link.href = isDark ? '/logo-dark.png' : '/logo-white.png';
+      };
+
+      updateFavicon();
+
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateFavicon);
+    })();
+  </script>
+  <link rel="canonical" href="https://elevenautoparts.com" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

@@ -7,6 +7,10 @@
         {
             "source": "/auth/:path*",
             "destination": "https://api.elevenautoparts.com.br/auth/:path*"
+        },
+        {
+            "source": "/:path*",
+            "destination": "/index.html"
         }
     ]
 }
