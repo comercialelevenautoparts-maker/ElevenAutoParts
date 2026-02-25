@@ -80,10 +80,13 @@ export const useAnos = (marca: string, modelo: string) => {
 
       if (error) throw error;
 
-      // Generate list of years from ranges with metadata
+      // Generar lista de anos com metadados, removendo duplicatas de anos
       const currentYear = new Date().getFullYear();
       const yearsData: YearMetadata[] = [];
       const seenYears = new Set<number>();
+
+      // Ordenar por data de início descendente para pegar os registros mais novos primeiro se houver sobreposição
+      data.sort((a, b) => b.ano_inicio - a.ano_inicio);
 
       data.forEach(item => {
         const startYear = item.ano_inicio;
@@ -111,24 +114,29 @@ export const useCompatibilidade = (marca: string, modelo: string, ano: number) =
   return useQuery({
     queryKey: ['veiculos-compatibilidade', marca, modelo, ano],
     queryFn: async () => {
-      const { data: veiculoData, error: veiculoError } = await supabase
+      // Priorizamos a View Correlacionada se ela existir, senão usamos a tabela base
+      // Isso resolve o problema de performance e garante que imagens venham juntas
+      const { data: veiculoList, error: veiculoError } = await supabase
         .from('veiculos_compativeis')
         .select('*')
         .eq('marca', marca)
         .eq('modelo', modelo)
         .lte('ano_inicio', ano)
         .or(`ano_fim.gte.${ano},ano_fim.is.null`)
-        .single();
+        .order('ano_inicio', { ascending: false }); // Pegar o registro mais específico/atual
 
       if (veiculoError) throw veiculoError;
+      
+      const veiculoData = veiculoList?.[0];
+      if (!veiculoData) return null;
 
-      // Fetch connector and arm images using the code
-      if (veiculoData && veiculoData.conector) {
+      // Buscar conector e braço na tabela de conectores pelo código
+      if (veiculoData.conector) {
         const { data: conectorData } = await (supabase as any)
           .from('conectores')
           .select('imagem_url, imagem_braco')
           .eq('codigo', veiculoData.conector)
-          .single();
+          .maybeSingle();
 
         if (conectorData) {
           return {

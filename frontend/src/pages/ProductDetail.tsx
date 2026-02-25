@@ -19,7 +19,18 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { favorites, isFavorite, toggleFavorite, loadFavorites } = useFavorites();
   const { user } = useAuth();
-  const { data: product, isLoading, error } = useStripeProduct(id || '');
+  
+  const { data: product, isLoading, error, isError } = useStripeProduct(id || '');
+
+  useEffect(() => {
+    console.log('📦 ProductDetail Debug:', {
+      id_da_url: id,
+      carregando: isLoading,
+      erro_objeto: error,
+      produto_carregado: !!product,
+      nome_produto: product?.name
+    });
+  }, [id, isLoading, error, product]);
 
   useEffect(() => {
     if (user) {
@@ -81,11 +92,13 @@ const ProductDetail = () => {
     setIsAnoOpen(false);
   };
 
-  // Obter imagens principais e secundárias
-  const allImages = [
-    ...(product?.image ? [{ url_imagem: product.image, principal: true }] : []),
-    ...(product?.produto_imagens?.map(img => ({ url_imagem: img.url_imagem, principal: img.principal })) || [])
-  ];
+  // Obter imagens: mostra apenas a principal por padrão (ex: se tiver apenas 2 imagens
+  // que costumam ser duplicatas ou variações simples da principal).
+  // Mostra a galeria completa apenas se houver mais de 2 imagens (indicando que possui extras).
+  const allImagesRaw = product?.produto_imagens || [];
+  const allImages = allImagesRaw.length > 2
+    ? allImagesRaw
+    : (product?.image ? [{ url_imagem: product.image, principal: true }] : []);
   const [selectedSize, setSelectedSize] = useState('');
 
   if (isLoading) {
@@ -102,20 +115,32 @@ const ProductDetail = () => {
     );
   }
 
-  if (error || !product) {
+  if (isError || !product) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center py-16">
             <h2 className="text-2xl font-bold text-foreground">Produto não encontrado</h2>
-            <p className="text-muted-foreground mt-2">O produto que você está procurando não existe ou foi removido.</p>
+            <div className="max-w-md mx-auto mt-4 text-left p-6 bg-red-50 border border-red-200 rounded-xl space-y-4">
+               <div>
+                  <h3 className="font-bold text-red-800">Detalhes do Erro:</h3>
+                  <p className="text-sm text-red-600">
+                    {error instanceof Error ? error.message : "Desculpe, não conseguimos localizar este produto em nosso catálogo."}
+                  </p>
+               </div>
+               <div className="text-[10px] font-mono bg-red-100 p-2 rounded text-red-700 overflow-auto max-h-40">
+                  <p>Intent ID: {id}</p>
+                  <p>Product: {JSON.stringify(product || 'null')}</p>
+                  <p>Raw Error: {JSON.stringify(error || 'null')}</p>
+               </div>
+            </div>
             <Button
-              onClick={() => navigate(-1)}
-              className="mt-4 bg-primary hover:bg-primary/90"
+              onClick={() => navigate('/produtos')}
+              className="mt-8 bg-primary hover:bg-primary/90"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
+              Ver todos os produtos
             </Button>
           </div>
         </main>

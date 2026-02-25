@@ -32,25 +32,9 @@ export interface StripeProduct {
 export function useStripeProducts(category?: string) {
     const queryClient = useQueryClient();
 
-    // Listener de tempo real para a tabela 'produtos'
-    useEffect(() => {
-        const channel = supabase
-            .channel('public:produtos')
-            .on(
-                'postgres_changes',
-                { event: '*', table: 'produtos', schema: 'public' },
-                () => {
-                    console.log('🔄 Mudança detectada na tabela produtos! Atualizando cache...');
-                    queryClient.invalidateQueries({ queryKey: ['stripe-products'] });
-                    queryClient.invalidateQueries({ queryKey: ['stripe-product'] });
-                }
-            )
-            .subscribe();
+    // Listener de tempo real removido temporariamente para depuração pura
+    // ...
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [queryClient]);
 
     return useQuery({
         queryKey: ['stripe-products', category],
@@ -109,34 +93,51 @@ export function useStripeProducts(category?: string) {
  */
 export function useStripeProduct(productId: string) {
     return useQuery({
-        queryKey: ['stripe-product', productId],
+        queryKey: ['stripe-product-details', productId],
         queryFn: async () => {
+            console.log('🔍 useStripeProduct: Buscando produto ID:', productId);
+            // First fetch the main product data
             const { data, error } = await supabase
                 .from('produtos')
-                .select(`
-                    *,
-                    produto_tamanhos(*),
-                    produto_imagens(*)
-                `)
+                .select('*')
                 .eq('id', productId)
                 .single();
 
             if (error) {
-                console.error('Erro ao buscar produto:', error);
+                console.error('❌ useStripeProduct: Erro ao buscar produto:', error);
                 throw error;
             }
+            console.log('✅ useStripeProduct: Produto encontrado:', data.nome);
 
             const p = data as any;
             const mainImage = p.imagem_principal;
 
-            // Map new 'imagens' array column to the structure component expects
-            // Filtering out main image to avoid duplication in the gallery
-            const extraImages = (p.imagens || [])
-                .filter((url: string) => url !== mainImage)
-                .map((url: string) => ({ url_imagem: url, principal: false }));
+            // Fetch extra data in parallel, but handle them gracefully if they fail
+            const [tamanhosRes, imagensRes] = await Promise.all([
+                supabase.from('produto_tamanhos').select('*').eq('produto_id', productId),
+                supabase.from('produto_imagens').select('*').eq('produto_id', productId)
+            ]);
 
-            // Fallback for legacy 'produto_imagens' relation if 'imagens' column is empty
-            const finalImages = extraImages.length > 0 ? extraImages : p.produto_imagens;
+            // If relation fetch fails, we just use empty array instead of crashing the whole query
+            const dbTamanhos = tamanhosRes.data || [];
+            const dbImagens = imagensRes.data || [];
+
+            // Estratégia de busca de imagens:
+            // 1. Pega da tabela relacionada 'produto_imagens'
+            // 2. Pega da coluna array 'imagens' do produto
+            // 3. Usa o conjunto que for maior (mais completo)
+            const tableImages = dbImagens.map(img => ({ url_imagem: img.url_imagem, principal: img.principal }));
+            const arrayImages = (p.imagens || []).map((url: string) => ({
+                url_imagem: url,
+                principal: url === mainImage
+            }));
+
+            let finalImages = arrayImages.length >= tableImages.length ? arrayImages : tableImages;
+
+            // Garante que a imagem principal esteja presente se nada mais for encontrado
+            if (finalImages.length === 0 && mainImage) {
+                finalImages.push({ url_imagem: mainImage, principal: true });
+            }
 
             return {
                 id: p.id,
@@ -153,7 +154,7 @@ export function useStripeProduct(productId: string) {
                 active: p.ativo,
                 created_at: p.created_at,
                 updated_at: p.updated_at || p.created_at,
-                produto_tamanhos: p.produto_tamanhos,
+                produto_tamanhos: dbTamanhos,
                 produto_imagens: finalImages,
             } as StripeProduct;
         },
