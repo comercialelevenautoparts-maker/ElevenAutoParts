@@ -69,7 +69,14 @@ router.post('/', async (req, res) => {
                         // --- INTEGRACAO BLING ---
                         try {
                             // Dispara a criação do pedido no Bling de forma assíncrona
-                            BlingService.createSalesOrder(orderId).catch(err => {
+                            BlingService.createSalesOrder(orderId).then(result => {
+                                if (result && result.success && result.blingOrderId) {
+                                    console.log(`🚀 Iniciando emissão automática de NF-e para Pedido Bling: ${result.blingOrderId}`);
+                                    BlingService.emitirNFe(orderId, result.blingOrderId).catch(err => {
+                                        console.error('⚠️ Erro ao emitir NFe no Bling (via Webhook):', err.message);
+                                    });
+                                }
+                            }).catch(err => {
                                 console.error('⚠️ Erro ao criar pedido no Bling (via Webhook):', err.message);
                             });
                         } catch (blingErr) {

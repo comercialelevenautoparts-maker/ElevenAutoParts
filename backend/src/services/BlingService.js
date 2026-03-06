@@ -184,6 +184,70 @@ class BlingService {
                     if (contactRes.data?.data?.length > 0) {
                         blingContactId = contactRes.data.data[0].id;
                         console.log(`   ✅ Contato encontrado: ${blingContactId}`);
+                        
+                        // Opcionalmente: Atualizar o endereço do contato se tivermos um endereço e ele for novo / diferente. 
+                        // O Bling v3 puxa da NFE baseado no endereço do contato.
+                        if (address) {
+                            try {
+                                const updateContactPayload = {
+                                    id: blingContactId,
+                                    nome: profile.nome || profile.email,
+                                    tipo: cpfLimpo.length > 11 ? 'J' : 'F',
+                                    situacao: 'A',
+                                    numeroDocumento: cpfLimpo,
+                                    endereco: {
+                                        geral: {
+                                            endereco: address.logradouro.substring(0, 100),
+                                            numero: address.numero,
+                                            bairro: (address.bairro || 'Sem Bairro').substring(0, 50),
+                                            cep: (address.cep || '').replace(/\D/g, ''),
+                                            municipio: (address.cidade || 'São Paulo').substring(0, 50),
+                                            uf: (address.uf || 'SP').substring(0, 2),
+                                            complemento: (address.complemento || '').substring(0, 50)
+                                        }
+                                    }
+                                };
+                                await axios.put(`${BLING_API_URL}/contatos/${blingContactId}`, updateContactPayload, {
+                                    headers: { Authorization: `Bearer ${token}` }
+                                });
+                                console.log(`   ✅ Endereço do contato atualizado no Bling com sucesso.`);
+                            } catch (updateErr) {
+                                console.log('   ⚠️ Erro ao atualizar endereço do contato (ignorado):', updateErr.response?.data || updateErr.message);
+                            }
+                        }
+                    } else {
+                        // Se não encontrou contato, tentar CRIAR o contato primeiro com o endereço!
+                        try {
+                            const newContactPayload = {
+                                nome: profile.nome || profile.email,
+                                tipo: cpfLimpo.length > 11 ? 'J' : 'F',
+                                numeroDocumento: cpfLimpo,
+                                situacao: 'A'
+                            };
+                            
+                            if (address) {
+                                newContactPayload.endereco = {
+                                    geral: {
+                                        endereco: address.logradouro.substring(0, 100),
+                                        numero: address.numero,
+                                        bairro: (address.bairro || 'Sem Bairro').substring(0, 50),
+                                        cep: (address.cep || '').replace(/\D/g, ''),
+                                        municipio: (address.cidade || 'São Paulo').substring(0, 50),
+                                        uf: (address.uf || 'SP').substring(0, 2),
+                                        complemento: (address.complemento || '').substring(0, 50)
+                                    }
+                                };
+                            }
+                            
+                            const createRes = await axios.post(`${BLING_API_URL}/contatos`, newContactPayload, {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                            
+                            blingContactId = createRes.data?.data?.id;
+                            console.log(`   ✅ Novo contato CRIADO no Bling: ${blingContactId}`);
+                        } catch (createErr) {
+                           console.log('   ⚠️ Erro ao criar contato com endereço:', createErr.response?.data || createErr.message); 
+                        }
                     }
                 } catch (err) {
                     console.log('   ⚠️ Contato não encontrado ou erro na busca.');
@@ -216,6 +280,7 @@ class BlingService {
             };
 
             if (address) {
+                // Preenche os dados de entrega no nível da Venda (transporte)
                 blingOrder.transporte.enderecoEntrega = {
                     endereco: address.logradouro,
                     numero: address.numero,
@@ -275,7 +340,9 @@ class BlingService {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            const nfeId = response.data?.data?.id;
+            const nfeId = response.data?.data?.idNotaFiscal || response.data?.data?.id;
+            if (!nfeId) throw new Error('ID da Nota Fiscal não retornado pelo Bling.');
+
             console.log(`✅ NF-e gerada com sucesso! ID da Nota: ${nfeId}`);
 
             // 2. Buscar detalhes da Nota Fiscal Gerada para obter Chave e Link
