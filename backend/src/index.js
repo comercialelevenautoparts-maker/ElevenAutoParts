@@ -27,6 +27,8 @@ const pedidosRoutes = require('./routes/pedidos');
 app.use('/api/pedidos', pedidosRoutes); // Rotas de pedidos (Admin e gestão)
 const freteRoutes = require('./routes/frete');
 app.use('/api/frete', freteRoutes); // Cálculo de frete
+const systemRoutes = require('./routes/system');
+app.use('/api/system', systemRoutes); // Rotas de manutenção e sistema (Monitoramento)
 
 // === ROTAS STRIPE ===
 const stripeRoutes = require('./routes/stripe');

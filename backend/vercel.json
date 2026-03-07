@@ -5,5 +5,11 @@
             "source": "/(.*)",
             "destination": "/src/index.js"
         }
+    ],
+    "crons": [
+        {
+            "path": "/api/system/heartbeat",
+            "schedule": "0 0 * * *"
+        }
     ]
 }

@@ -3,25 +3,59 @@ logs
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency directories
 node_modules
+/jspm_packages
+
+# Build outputs
 dist
 dist-ssr
-*.local
+build/
+out/
+.next/
+.serverless/
+.vercel
+
+# Environment variables
 .env
+.env.local
+.env.*.local
 .env.development
 .env.production
+!.env.example
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Test related files
+coverage/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+.nyc_output/
+cypress/videos/
+cypress/screenshots/
+
+# Temporary and development files
+.eslintcache
+*.tsbuildinfo
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+tmp/
+temp/
+test_*.js
+test_*.ts
+test_*.tsx
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
