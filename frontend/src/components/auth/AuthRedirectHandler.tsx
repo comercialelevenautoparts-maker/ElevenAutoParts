@@ -12,10 +12,10 @@ export const AuthRedirectHandler = () => {
   useEffect(() => {
     // Só processa se o loading da auth terminou e temos um usuário
     if (!loading && user) {
-      const returnTo = sessionStorage.getItem('eleven_return_to');
+      const returnTo = localStorage.getItem('eleven_return_to');
       if (returnTo) {
-        console.log('AuthRedirectHandler: Redirecionando para rota pendente:', returnTo);
-        sessionStorage.removeItem('eleven_return_to');
+        console.log('AuthRedirectHandler: Redirecionando para rota pendente (localStorage):', returnTo);
+        localStorage.removeItem('eleven_return_to');
         navigate(returnTo, { replace: true });
       }
     }

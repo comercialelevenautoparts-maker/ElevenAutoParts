@@ -146,13 +146,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Evitar redirecionamento para páginas de login/registro
     const finalPath = redirectTo || (currentPath === '/login' || currentPath === '/registro' ? '/' : currentPath);
     
-    // Persistir a rota pretendida para recuperar após o retorno do OAuth
+    // Garantir que a URL inclua a barra correta
+    const cleanPath = finalPath.startsWith('/') ? finalPath : `/${finalPath}`;
+    const redirectUrl = `${window.location.origin}${cleanPath}`;
+
+    // Apenas por precaução caso o Supabase ignore a url dinâmica (como fallback)
     if (finalPath !== '/') {
-      sessionStorage.setItem('eleven_return_to', finalPath);
+      localStorage.setItem('eleven_return_to', finalPath); // Trocando de sessionStorage para localStorage para evitar perda cross-tab
     }
 
-    const redirectUrl = `${window.location.origin}/`; // Redireciona sempre para a home para evitar erros de allowlist do Supabase
-    console.log('Google Auth Redirecting to origin, will return to:', finalPath);
+    console.log('Google Auth Redirecting exactly to:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
