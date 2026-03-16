@@ -244,8 +244,13 @@ const Checkout = () => {
       setValue('email', user.email || '');
       setValue('cpf', profile.cpf || '');
       setValue('phone', formatPhone(profile.telefone || ''));
+      
+      // Se o usuário logou (via Google ou modal), avança automaticamente para o endereço se estiver no passo 1
+      if (step === 1) {
+        setStep(2);
+      }
     }
-  }, [user, profile, setValue]);
+  }, [user, profile, setValue, step]);
 
   useEffect(() => {
     const fetchPaymentIntent = async () => {
@@ -424,10 +429,13 @@ const Checkout = () => {
     setStripeSubmitFn(() => fn);
   }, []);
 
-  if (items.length === 0) {
-    navigate('/carrinho');
-    return null;
-  }
+  useEffect(() => {
+    if (items.length === 0) {
+      navigate('/carrinho');
+    }
+  }, [items.length, navigate]);
+
+  if (items.length === 0) return null;
 
   return (
     <div className="min-h-screen bg-background">

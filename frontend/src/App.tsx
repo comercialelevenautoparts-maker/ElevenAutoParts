@@ -29,7 +29,7 @@ import BlingIntegration from "./pages/admin/BlingIntegration";
 
 import ScrollToTop from "./components/common/ScrollToTop";
 
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { AuthRedirectHandler } from "./components/auth/AuthRedirectHandler";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +41,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AuthRedirectHandler />
           <ScrollToTop />
           <WhatsAppButton />
           <Routes>

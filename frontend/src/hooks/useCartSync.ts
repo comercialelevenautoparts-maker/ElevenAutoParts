@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useCart } from './useCart';
+import { useCart, CartItem } from './useCart';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,20 +25,20 @@ export const useCartSync = () => {
 
             try {
                 // Find user's cart
-                const { data: cartData } = await supabase
+                const { data: cartData, error: cartError } = await supabase
                     .from('carrinhos')
                     .select('id')
                     .eq('user_id', user.id)
-                    .single();
+                    .maybeSingle(); // Usar maybeSingle para evitar erro 406/404 se não existir
 
                 let cartId = cartData?.id;
 
-                if (!cartId) {
-                    const { data: newCart } = await supabase
+                if (!cartId && !cartError) {
+                    const { data: newCart, error: insertError } = await supabase
                         .from('carrinhos')
                         .insert({ user_id: user.id })
                         .select()
-                        .single();
+                        .maybeSingle();
                     cartId = newCart?.id;
                 }
 
@@ -50,7 +50,7 @@ export const useCartSync = () => {
                         .eq('carrinho_id', cartId);
 
                     if (dbItems) {
-                        const mappedDbItems = dbItems.map((dbItem) => {
+                        const mappedDbItems: CartItem[] = dbItems.map((dbItem) => {
                             const product = dbItem.produtos as any;
                             return {
                                 id: dbItem.produto_id,
@@ -63,16 +63,31 @@ export const useCartSync = () => {
                             };
                         });
 
-                        // Se temos itens locais, pode ser uma sessão de convidado que acabou de logar
-                        // Ou pode ser apenas o cache do persist que já estava correto.
-                        // Para evitar a duplicação exponencial, vamos tratar o DB como fonte da verdade
-                        // para usuários logados, mas permitindo merge apenas na PRIMEIRA vez que loga.
-
+                        // LÓGICA DE MERGE:
+                        // Se temos itens locais (convidado) e acabamos de logar (!lastLoadedUserId)
                         if (items.length > 0 && !lastLoadedUserId.current) {
-                            // Merge logic (opcional, dependendo da UX desejada)
-                            // Por agora, vamos apenas priorizar o DB para evitar o bug de crescimento
-                            setItems(mappedDbItems);
+                            console.log('useCartSync: Mesclando carrinho local com o banco de dados...');
+                            
+                            // Cria um mapa para facilitar a busca por duplicados (ID + Tamanho)
+                            const mergedItems: CartItem[] = [...mappedDbItems];
+                            
+                            items.forEach(localItem => {
+                                const findIndex = mergedItems.findIndex(dbItem => 
+                                    dbItem.id === localItem.id && dbItem.size === localItem.size
+                                );
+                                
+                                if (findIndex > -1) {
+                                    // Se já existe no banco, somamos a quantidade (opcional, ou podemos manter a do banco)
+                                    mergedItems[findIndex].quantity += localItem.quantity;
+                                } else {
+                                    // Se não existe, adicionamos o novo item
+                                    mergedItems.push(localItem);
+                                }
+                            });
+                            
+                            setItems(mergedItems);
                         } else {
+                            // Se não há o que mesclar ou já estamos sincronizados, apenas carrega do banco
                             setItems(mappedDbItems);
                         }
                     }

@@ -11,7 +11,7 @@ interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ data: { user: User | null; session: Session | null } | null; error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, nome: string, referralCode?: string | null) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -141,9 +141,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { data, error: error as Error | null };
   };
 
-  const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/`;
-    console.log('Google Auth Redirecting to:', redirectUrl);
+  const signInWithGoogle = async (redirectTo?: string) => {
+    const currentPath = window.location.pathname;
+    // Evitar redirecionamento para páginas de login/registro
+    const finalPath = redirectTo || (currentPath === '/login' || currentPath === '/registro' ? '/' : currentPath);
+    
+    // Persistir a rota pretendida para recuperar após o retorno do OAuth
+    if (finalPath !== '/') {
+      sessionStorage.setItem('eleven_return_to', finalPath);
+    }
+
+    const redirectUrl = `${window.location.origin}/`; // Redireciona sempre para a home para evitar erros de allowlist do Supabase
+    console.log('Google Auth Redirecting to origin, will return to:', finalPath);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
