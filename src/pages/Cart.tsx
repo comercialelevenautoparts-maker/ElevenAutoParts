@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import  React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, Truck, ChevronRight, AlertCircle, Check, Loader2 } from 'lucide-react';
+import { Trash2, Minus, Plus, Truck, ChevronRight, Check, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
-import { useShipping, ShippingOption } from '@/hooks/useShipping';
-import { toast } from 'sonner';
+import { useShipping } from '@/hooks/useShipping';
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCart();

@@ -43,15 +43,7 @@ const Favorites = () => {
 
   const handleAddToCart = async (produto: Tables<'produtos'>) => {
     try {
-      if (!user) {
-        toast({
-          title: "Faça login para continuar",
-          description: "Você precisa estar logado para adicionar itens ao carrinho.",
-          variant: "destructive",
-        });
-        navigate('/login');
-        return;
-      }
+      // Permite adicionar ao carrinho como visitante
 
       const selectedProdutoSize = selectedSize[produto.id];
 

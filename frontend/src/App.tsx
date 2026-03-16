@@ -52,12 +52,12 @@ const App = () => (
             <Route path="/carrinho" element={<Cart />} />
 
             {/* Protected Routes */}
-            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-            <Route path="/pedidos" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-            <Route path="/perfil" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/favoritos" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-            <Route path="/meus-cupons" element={<ProtectedRoute><MyCoupons /></ProtectedRoute>} />
-            <Route path="/indique-e-ganhe" element={<ProtectedRoute><IndicateAndEarn /></ProtectedRoute>} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/pedidos" element={<Orders />} />
+            <Route path="/perfil" element={<Profile />} />
+            <Route path="/favoritos" element={<Favorites />} />
+            <Route path="/meus-cupons" element={<MyCoupons />} />
+            <Route path="/indique-e-ganhe" element={<IndicateAndEarn />} />
 
             <Route path="/suporte" element={<Support />} />
             <Route path="/rastreio" element={<Tracking />} />

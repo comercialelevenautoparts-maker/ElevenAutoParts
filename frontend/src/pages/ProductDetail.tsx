@@ -150,15 +150,7 @@ const ProductDetail = () => {
   }
 
   const handleAddToCart = (redirect = false) => {
-    if (!user) {
-      toast({
-        title: "Faça login para continuar",
-        description: "Você precisa estar logado para adicionar itens ao carrinho.",
-        variant: "destructive",
-      });
-      navigate('/login');
-      return;
-    }
+    // Permite adicionar ao carrinho sem estar logado
 
     // Se for palheta ou o produto exigir seleção de veículo
     const isWiper = product.name.toLowerCase().includes('palheta');
@@ -232,11 +224,10 @@ const ProductDetail = () => {
   const handleFavoriteToggle = async () => {
     if (!user) {
       toast({
-        title: "Faça login para continuar",
-        description: "Você precisa estar logado para adicionar itens aos favoritos.",
-        variant: "destructive",
+        title: "Identificação necessária",
+        description: "Sua lista de favoritos será sincronizada assim que você se identificar no checkout.",
+        variant: "default",
       });
-      navigate('/login');
       return;
     }
 

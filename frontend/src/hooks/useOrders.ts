@@ -81,14 +81,11 @@ export const useCreateOrder = () => {
         metadata?: Record<string, any>;
       }[];
     }) => {
-      if (!user) throw new Error('Not authenticated');
-
-      // Generate order number
+      // Guest orders are allowed
       const numero_pedido = `#${Date.now().toString(36).toUpperCase()}`;
 
-      // Create order
       const orderPayload: any = {
-        user_id: user.id,
+        user_id: user?.id || null,
         endereco_id: orderData.endereco_id,
         numero_pedido,
         valor_produtos: orderData.valor_produtos,

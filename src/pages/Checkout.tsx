@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import  React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,8 +52,14 @@ const formatCEP = (value: string) => {
 // --- SCHEMA VALIDATION (ZOD) ---
 const checkoutSchema = z.object({
   // Step 1: Address
-  phone: z.string().min(14, 'Telefone inválido').max(15, 'Telefone inválido'),
-  cep: z.string().min(9, 'CEP incompleto'),
+  phone: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length >= 10 && digits.length <= 11;
+  }, 'Telefone inválido'),
+  cep: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length === 8;
+  }, 'CEP incompleto'),
   street: z.string().min(1, 'Rua é obrigatória'),
   number: z.string().min(1, 'Número é obrigatório'),
   complement: z.string().optional(),
@@ -796,7 +802,7 @@ const Checkout = () => {
 
               {step === 1 && (
                 <Button type="button" onClick={nextStep} className="btn-primary w-full mt-6">
-                  Continuar para Pagamento
+                  Continuar
                 </Button>
               )}
 

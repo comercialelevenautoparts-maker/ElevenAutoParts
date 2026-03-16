@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Check, MapPin, CreditCard, Package, QrCode, Barcode, FileText, Loader2, ShieldCheck, Truck, Wallet, Trash2, Plus, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Check, MapPin, CreditCard, Package, QrCode, Barcode, FileText, Loader2, ShieldCheck, Truck, Wallet, Trash2, Plus, ChevronLeft, CheckCircle2, User, LogIn, Lock, Mail, Eye, EyeOff, User as UserIcon, CreditCard as CardIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Stripe Imports
@@ -49,11 +49,22 @@ const formatCEP = (value: string) => {
     .slice(0, 9);
 };
 
-// --- SCHEMA VALIDATION (ZOD) ---
 const checkoutSchema = z.object({
+  // Step 1: Personal Info (Guest)
+  fullName: z.string().min(3, 'Nome muito curto').optional(),
+  email: z.string().email('E-mail inválido').optional(),
+  cpf: z.string().min(11, 'CPF inválido').optional(),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').optional(),
+
   // Step 1: Address
-  phone: z.string().min(14, 'Telefone inválido').max(15, 'Telefone inválido'),
-  cep: z.string().min(9, 'CEP incompleto'),
+  phone: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length >= 10 && digits.length <= 11;
+  }, 'Telefone inválido'),
+  cep: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length === 8;
+  }, 'CEP incompleto'),
   street: z.string().min(1, 'Rua é obrigatória'),
   number: z.string().min(1, 'Número é obrigatório'),
   complement: z.string().optional(),
@@ -79,8 +90,15 @@ const Checkout = () => {
     boletoUrl?: string;
   } | null>(null);
   const { items, getTotalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, profile, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  const [authMode, setAuthMode] = useState<'register' | 'login'>('login');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   const { data: savedAddresses = [] } = useAddresses();
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -100,6 +118,10 @@ const Checkout = () => {
       bairro: '',
       city: '',
       state: '',
+      fullName: '',
+      email: '',
+      cpf: '',
+      password: '',
       paymentMethod: 'credit',
     },
     mode: 'onChange',
@@ -136,9 +158,10 @@ const Checkout = () => {
   const finalTotal = subtotal + shipping - couponDiscount;
 
   const steps = [
-    { id: 1, name: 'Endereço', icon: MapPin },
-    { id: 2, name: 'Pagamento', icon: CreditCard },
-    { id: 3, name: 'Resumo', icon: Package },
+    { id: 1, name: 'Identificação', icon: User },
+    { id: 2, name: 'Endereço', icon: MapPin },
+    { id: 3, name: 'Pagamento', icon: CreditCard },
+    { id: 4, name: 'Resumo', icon: Package },
   ];
 
   const { refetch: validateCoupon } = useCoupon(couponCode);
@@ -160,6 +183,27 @@ const Checkout = () => {
       toast.error(err.message || 'Erro ao validar cupom.');
     } finally {
       setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleLoginCheckout = async () => {
+    if (!loginEmail || !loginPassword) {
+      toast.error("Preencha e-mail e senha para entrar.");
+      return;
+    }
+    setIsLoggingIn(true);
+    try {
+      const { error } = await signIn(loginEmail, loginPassword);
+      if (error) {
+        toast.error("Identificação inválida. Verifique seus dados.");
+      } else {
+        toast.success("Bem-vindo de volta!");
+        setStep(2);
+      }
+    } catch (err: any) {
+      toast.error("Erro ao conectar.");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -194,49 +238,62 @@ const Checkout = () => {
     await handleSearchCep(e.target.value);
   };
 
-
+  useEffect(() => {
+    if (user && profile) {
+      setValue('fullName', profile.nome || '');
+      setValue('email', user.email || '');
+      setValue('cpf', profile.cpf || '');
+      setValue('phone', formatPhone(profile.telefone || ''));
+    }
+  }, [user, profile, setValue]);
 
   useEffect(() => {
     const fetchPaymentIntent = async () => {
-      if (step === 2 && finalTotal > 0 && !clientSecret) {
-        try {
-          const apiUrl = import.meta.env.VITE_API_URL || '';
-          const response = await fetch(`${apiUrl}/api/create-payment-intent`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              amount: finalTotal,
-              currency: 'brl',
-              customerEmail: user?.email,
-              metadata: {
-                userId: user?.id,
-                orderItems: items.length
-              }
-            }),
-          });
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/create-payment-intent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: finalTotal,
+            currency: 'brl',
+            customerEmail: user?.email || watch('email'),
+            metadata: {
+              userId: user?.id || 'guest',
+              orderItems: items.length
+            }
+          }),
+        });
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Falha ao iniciar pagamento');
-          }
-
-          const data = await response.json();
-          setClientSecret(data.clientSecret);
-        } catch (error: any) {
-          console.error("Error creating payment intent:", error);
-          toast.error(error.message || "Erro ao inicializar pagamento seguro.");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Falha ao iniciar pagamento');
         }
+
+        const data = await response.json();
+        setClientSecret(data.clientSecret);
+      } catch (error: any) {
+        console.error("Error creating payment intent:", error);
+        toast.error(error.message || "Erro ao inicializar pagamento seguro.");
       }
     };
 
-    fetchPaymentIntent();
-  }, [step, finalTotal, user, items.length, clientSecret]);
+    if (step === 2 && finalTotal > 0 && !clientSecret && (user || watch('email'))) {
+      fetchPaymentIntent();
+    }
+  }, [step, finalTotal, user, items.length, clientSecret, watch]);
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof CheckoutFormValues)[] = [];
     if (step === 1) {
+      if (user) {
+        setStep(2);
+        return;
+      }
+      fieldsToValidate = ['fullName', 'email', 'cpf', 'password'];
+    } else if (step === 2) {
       if (selectedAddressId) {
-        fieldsToValidate = ['phone']; // Only phone is needed if address is selected
+        fieldsToValidate = ['phone'];
       } else {
         fieldsToValidate = ['phone', 'cep', 'street', 'number', 'complement', 'bairro', 'city', 'state'];
       }
@@ -263,7 +320,33 @@ const Checkout = () => {
   const { mutateAsync: createAddress } = useCreateAddress();
   const { mutateAsync: deleteAddress } = useDeleteAddress();
 
+  const { signUp } = useAuth();
+
   const handleCreateOrder = async (status: string, formaPagamento?: string) => {
+    let currentUserId = user?.id;
+
+    // Auto-register guest if needed
+    if (!user) {
+      const email = watch('email');
+      const password = watch('password');
+      const nome = watch('fullName');
+      
+      if (email && password && nome) {
+        try {
+          const { error } = await signUp(email, password, nome);
+          if (error) {
+            toast.error("Erro ao criar conta: " + error.message);
+            throw error;
+          }
+          // Note: After signUp, Supabase might not automatically sign in depending on config.
+          // For simplicity, we'll try to get the user again or assume session will be created.
+          toast.success("Conta criada com sucesso! Verifique seu e-mail.");
+        } catch (err: any) {
+          throw err;
+        }
+      }
+    }
+
     let addressId = selectedAddressId;
 
     if (!addressId) {
@@ -341,12 +424,15 @@ const Checkout = () => {
     setStripeSubmitFn(() => fn);
   }, []);
 
-  if (!user) return null;
+  if (items.length === 0) {
+    navigate('/carrinho');
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-4 md:py-8 max-w-6xl">
+      <main className="container mx-auto px-4 py-4 md:py-8 max-w-5xl">
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-6 md:mb-10">
           {steps.map((s, i) => (
@@ -364,13 +450,217 @@ const Checkout = () => {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start">
-          <div className="lg:col-span-2">
-            <Form {...form}>
-              <form>
+        <Form {...form}>
+          <form>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 items-start">
+              <div className="lg:col-span-2">
                 <div className="space-y-3.5 md:space-y-8">
-                  {/* STEP 1: Address */}
+                  {/* STEP 1: Identification */}
                   {step === 1 && (
+                    <div className="bg-card border border-border/100 rounded-xl p-3.5 md:p-6 shadow-sm animate-in fade-in slide-in-from-left-4">
+                      <div className="flex flex-col items-center text-center gap-2 mb-6 pb-3 border-b border-border/40">
+                        <User className="text-primary w-6 h-6 md:w-8 md:h-8" />
+                        <div className="flex-1">
+                          <h2 className="text-base md:text-xl font-bold uppercase tracking-widest text-foreground/80">Identificação</h2>
+                          <p className="text-muted-foreground text-[10px] md:text-sm font-medium uppercase tracking-tighter opacity-70">Como devemos identificar seu pedido?</p>
+                        </div>
+                      </div>
+
+                      {user ? (
+                        <div className="p-6 bg-primary/5 rounded-xl border border-primary/20 flex flex-col items-center text-center gap-4">
+                          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                            <CheckCircle2 className="w-8 h-8 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-lg">Olá, {profile?.nome || user.email?.split('@')[0]}!</p>
+                            <p className="text-sm text-muted-foreground">Você já está logado e pronto para continuar.</p>
+                          </div>
+                        </div>
+                      ) : (
+                          <div className="max-w-md mx-auto w-full space-y-6 text-center">
+                            <div className="flex bg-muted p-1 rounded-lg">
+                              <button
+                                type="button"
+                                onClick={() => setAuthMode('login')}
+                                className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${authMode === 'login' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                              >
+                                Já Tenho Conta
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setAuthMode('register')}
+                                className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${authMode === 'register' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                              >
+                                Sou Novo Cliente
+                              </button>
+                            </div>
+
+                            {authMode === 'register' ? (
+                              <>
+                                <div className="grid grid-cols-1 gap-4">
+                                  <FormField
+                                    control={form.control}
+                                    name="fullName"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <div className="relative">
+                                            <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input className="pl-11 h-12 text-sm bg-background/50" placeholder="Nome Completo" {...field} />
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <div className="relative">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input className="pl-11 h-12 text-sm bg-background/50" placeholder="Seu melhor e-mail" {...field} />
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name="cpf"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <div className="relative">
+                                            <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input className="pl-11 h-12 text-sm bg-background/50" placeholder="CPF / CNPJ" {...field} />
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                  <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormControl>
+                                          <div className="relative">
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input 
+                                              type={showRegisterPassword ? 'text' : 'password'} 
+                                              className="pl-11 pr-11 h-12 text-sm bg-background/50" 
+                                              placeholder="Crie uma Senha Forte" 
+                                              {...field} 
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                                              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                            >
+                                              {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                          </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                                <Button 
+                                  onClick={nextStep} 
+                                  className="w-full h-12 font-bold uppercase tracking-widest mt-6 shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                >
+                                  Próximo: Entrega
+                                </Button>
+                              </>
+                            ) : (
+                              <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
+                                <div className="space-y-4">
+                                  <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                    <Input 
+                                      className="pl-11 h-12 text-sm bg-background/50" 
+                                      placeholder="Endereço de E-mail" 
+                                      value={loginEmail}
+                                      onChange={(e) => setLoginEmail(e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="relative">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                    <Input 
+                                      type={showPassword ? 'text' : 'password'}
+                                      className="pl-11 pr-11 h-12 text-sm bg-background/50" 
+                                      placeholder="Sua Senha" 
+                                      value={loginPassword}
+                                      onChange={(e) => setLoginPassword(e.target.value)}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                    >
+                                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <button type="button" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                                    Esqueceu sua senha?
+                                  </button>
+                                </div>
+                                <Button 
+                                  type="button" 
+                                  onClick={handleLoginCheckout} 
+                                  disabled={isLoggingIn}
+                                  className="w-full h-12 font-bold uppercase tracking-widest mt-2 shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                                >
+                                  {isLoggingIn ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
+                                  Acessar Minha Conta
+                                </Button>
+
+                                <div className="relative my-6">
+                                  <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-border"></div>
+                                  </div>
+                                  <div className="relative flex justify-center text-xs md:text-sm">
+                                    <span className="px-4 bg-card text-muted-foreground font-medium uppercase">OU</span>
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  disabled={isLoggingIn}
+                                  onClick={async () => {
+                                    try {
+                                      await signInWithGoogle();
+                                    } catch (err) {
+                                      toast.error("Erro ao conectar com Google.");
+                                    }
+                                  }}
+                                  className="w-full h-12 flex items-center justify-center gap-3 px-4 border border-border rounded-xl hover:bg-muted transition-all active:scale-[0.98] bg-background shadow-sm"
+                                >
+                                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                  </svg>
+                                  <span className="text-xs md:text-sm font-semibold text-foreground/80">Faça login com sua conta do Google</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* STEP 2: Address */}
+                  {step === 2 && (
                     <div className="bg-card border border-border/100 rounded-xl p-3.5 md:p-6 shadow-sm animate-in fade-in slide-in-from-left-4">
                       <div className="flex items-center gap-3 mb-4 md:mb-6 pb-3 border-b border-border/40">
                         <MapPin className="text-primary w-4 h-4 md:w-6 md:h-6" />
@@ -650,12 +940,12 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  {/* STEPS 2 & 3: Payment and Summary */}
-                  {(step === 2 || step === 3) && (
+                  {/* STEPS 3 & 4: Payment and Summary */}
+                  {(step === 3 || step === 4) && (
                     <div className="flex flex-col">
                       {clientSecret && clientSecret.includes('_secret_') ? (
                         <Elements key="stable-stripe-provider" stripe={stripePromise} options={stripeOptions}>
-                          <div className={step === 3 ? 'block' : 'hidden'}>
+                          <div className={step === 4 ? 'block' : 'hidden'}>
                             <div className="bg-card border border-border/100 rounded-xl p-3.5 md:p-6 shadow-sm animate-in fade-in slide-in-from-right-4">
                               <div className="flex items-center gap-3 mb-4 md:mb-6 pb-3 border-b border-border/100">
                                 <div className="flex items-center gap-2">
@@ -727,10 +1017,11 @@ const Checkout = () => {
                             </div>
                           </div>
 
-                          <div className={step === 2 ? 'block' : 'contents'}>
-                            <div className={step === 2 ? 'bg-card border border-border/100 rounded-xl p-3.5 md:p-6 shadow-sm mb-4 md:mb-6' : 'h-0 overflow-hidden'}>
-                              {step === 2 && (
+                          <div className={(step === 3 || step === 4) ? 'block' : 'contents'}>
+                            <div className={step === 3 ? 'bg-card border border-border/100 rounded-xl p-3.5 md:p-6 shadow-sm mb-4 md:mb-6' : (step === 4 ? 'h-0 overflow-hidden' : 'hidden')}>
+                              {step === 3 && (
                                 <div className="flex items-center gap-3 mb-4 md:mb-6 pb-3 border-b border-border/100">
+                                  {/* Header content ... */}
                                   <div className="flex items-center gap-2">
                                     <button
                                       type="button"
@@ -749,8 +1040,8 @@ const Checkout = () => {
                               )}
 
                               <StripePaymentForm
-                                isSummaryStep={step === 3}
-                                onNextStep={() => setStep(3)}
+                                isSummaryStep={step === 4}
+                                onNextStep={() => setStep(4)}
                                 onSuccess={(orderId, data) => {
                                   setOrderSuccessData({ orderId, ...data });
                                 }}
@@ -765,7 +1056,6 @@ const Checkout = () => {
                                 onRegisterSubmit={handleRegisterSubmit}
                                 billingDetails={billingDetails}
                               />
-
                             </div>
                           </div>
                         </Elements>
@@ -778,11 +1068,9 @@ const Checkout = () => {
                     </div>
                   )}
                 </div>
-              </form>
-            </Form>
-          </div >
+              </div>
 
-          <div className="lg:col-span-1">
+              <div className="lg:col-span-1">
             <div className="bg-card border border-border/100 rounded-xl p-5 md:p-6 shadow-sm sticky top-24">
               <h3 className="font-bold text-[10px] md:text-xs uppercase tracking-widest mb-5 flex items-center gap-2 text-foreground/70">
                 <ShieldCheck className="w-3.5 h-3.5 text-primary" /> Resumo Financeiro
@@ -819,11 +1107,17 @@ const Checkout = () => {
 
               {step === 1 && (
                 <Button type="button" onClick={nextStep} className="btn-primary w-full mt-6">
-                  Continuar para Pagamento
+                  Continuar
                 </Button>
               )}
 
               {step === 2 && (
+                <Button type="button" onClick={nextStep} className="btn-primary w-full mt-6">
+                  Continuar
+                </Button>
+              )}
+
+              {step === 3 && (
                 <div className="space-y-3 mt-6">
                   <Button
                     type="button"
@@ -833,7 +1127,7 @@ const Checkout = () => {
                         return;
                       }
                       window.scrollTo({ top: 0, behavior: 'smooth' });
-                      setStep(3);
+                      setStep(4);
                     }}
                     className="btn-primary w-full"
                   >
@@ -842,7 +1136,7 @@ const Checkout = () => {
                 </div>
               )}
 
-              {step === 3 && (
+              {step === 4 && (
                 <div className="mt-6">
                   <Button
                     type="button"
@@ -857,10 +1151,12 @@ const Checkout = () => {
                   </Button>
                 </div>
               )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div >
-      </main >
+          </form>
+        </Form>
+      </main>
 
       {/* Success Modal Overlay */}
       {

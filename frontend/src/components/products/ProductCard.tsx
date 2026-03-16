@@ -44,11 +44,10 @@ const ProductCard = ({
 
     if (!user) {
       toast({
-        title: "Faça login para continuar",
-        description: "Você precisa estar logado para favoritar produtos.",
-        variant: "destructive",
+        title: "Identificação necessária",
+        description: "Sua lista de favoritos será sincronizada assim que você se identificar no checkout.",
+        variant: "default",
       });
-      navigate('/login');
       return;
     }
 
