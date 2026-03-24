@@ -3,7 +3,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 
 // Configurações
-const WEBHOOK_URL = 'http://localhost:3000/api/webhooks/stripe';
+const WEBHOOK_URL = 'https://www.elevenautoparts.com.br/api/webhooks/stripe';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 async function simulateStripeUpdate() {

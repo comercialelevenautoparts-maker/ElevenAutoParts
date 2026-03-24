@@ -2,11 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+// USANDO CHAVES ABSOLUTAS DO PROJETO YAGISISJKODCDHCZMPBF (FIXED)
+// Isso resolve o erro 401 Unauthorized de forma definitiva
+const SUPABASE_URL = "https://yagisisjkodcdhczmpbf.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhZ2lzaXNqa29kY2RoY3ptcGJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2NzI2NDMsImV4cCI6MjA3NzI0ODY0M30._oElqEESZxNdwAkSqyew3AfouIZlEbwkbd8QCcHal8g";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {

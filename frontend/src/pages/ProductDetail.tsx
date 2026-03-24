@@ -12,6 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMarcas, useModelos, useAnos, useCompatibilidade } from '@/hooks/useVehicles';
 
+// Debug flag
+const DEBUG_FILTERS = true;
+
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -57,6 +60,14 @@ const ProductDetail = () => {
   const { data: modelos = [] } = useModelos(selectedMarca);
   const { data: anos = [] } = useAnos(selectedMarca, selectedModelo);
   const { data: compatibilidade } = useCompatibilidade(selectedMarca, selectedModelo, selectedAno || 0);
+
+  if (DEBUG_FILTERS && marcas.length > 0) {
+    console.warn('🔍 [UI DEBUG] Marcas no Dropdown:', marcas.length, {
+      contem_toyota: marcas.includes('TOYOTA'),
+      contem_byd: marcas.includes('BYD'),
+      primeira: marcas[0]
+    });
+  }
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -489,14 +500,14 @@ const ProductDetail = () => {
                     </button>
                     {isModeloOpen && (
                       <div className="absolute top-full left-0 mt-1 w-full max-h-48 overflow-y-auto bg-card border border-border rounded-lg shadow-elevated z-50 py-1">
-                        {modelos.map((m) => (
+                        {modelos.map((modeloNome) => (
                           <button
-                            key={m.id}
-                            onClick={() => handleModeloSelect(m.modelo)}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${m.modelo === selectedModelo ? 'text-primary bg-primary/5' : ''}`}
+                            key={modeloNome}
+                            onClick={() => handleModeloSelect(modeloNome)}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${modeloNome === selectedModelo ? 'text-primary bg-primary/5' : ''}`}
                           >
-                            {m.modelo}
-                            {m.modelo === selectedModelo && <Check className="w-3 h-3 text-primary" />}
+                            {modeloNome}
+                            {modeloNome === selectedModelo && <Check className="w-3 h-3 text-primary" />}
                           </button>
                         ))}
                       </div>
@@ -520,14 +531,14 @@ const ProductDetail = () => {
                     </button>
                     {isAnoOpen && (
                       <div className="absolute top-full left-0 mt-1 w-full max-h-48 overflow-y-auto bg-card border border-border rounded-lg shadow-elevated z-50 py-1">
-                        {anos.map((a) => (
+                        {anos.map((anoString) => (
                           <button
-                            key={a.ano}
-                            onClick={() => handleAnoSelect(a.ano)}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${a.ano === selectedAno ? 'text-primary bg-primary/5' : ''}`}
+                            key={anoString}
+                            onClick={() => handleAnoSelect(parseInt(anoString))}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${parseInt(anoString) === selectedAno ? 'text-primary bg-primary/5' : ''}`}
                           >
-                            {a.ano}
-                            {a.ano === selectedAno && <Check className="w-3 h-3 text-primary" />}
+                            {anoString}
+                            {parseInt(anoString) === selectedAno && <Check className="w-3 h-3 text-primary" />}
                           </button>
                         ))}
                       </div>
@@ -672,43 +683,29 @@ const ProductDetail = () => {
 
             {/* Kit Visual Representation */}
             <div className="flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8">
-              <div className="flex items-center justify-center gap-4 sm:gap-6 bg-muted/30 p-4 sm:p-6 rounded-2xl border border-border/50">
-                {/* Conector (Esquerda) */}
-                <div className="flex flex-col items-center gap-1 sm:gap-2">
-                  <div className="bg-white p-1.5 sm:p-2 rounded-xl shadow-sm border border-border/50">
-                    {compatibilidade.imagem_conector ? (
-                      <img
-                        src={compatibilidade.imagem_conector}
-                        alt={`Conector ${compatibilidade.conector}`}
-                        className="h-16 sm:h-24 w-auto object-contain transition-transform hover:scale-110 duration-300"
-                      />
+              <div className="flex items-center justify-center gap-6 bg-muted/30 p-6 rounded-2xl mb-6">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="bg-white p-2 rounded-xl border">
+                    {compatibilidade.conectores?.imagem_url ? (
+                      <img src={compatibilidade.conectores.imagem_url} alt="Conector" className="h-16 w-auto" />
                     ) : (
-                      <div className="h-16 w-16 sm:h-24 sm:w-24 flex items-center justify-center bg-muted/10 rounded-lg border border-dashed text-[10px] text-muted-foreground font-bold">
-                        {compatibilidade.conector}
-                      </div>
+                      <div className="h-16 w-16 bg-muted flex items-center justify-center text-xs font-bold">{compatibilidade.conector}</div>
                     )}
                   </div>
-                  <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Conector</span>
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Conector</span>
                 </div>
 
-                <div className="text-2xl sm:text-4xl text-primary font-light animate-pulse">=</div>
+                <div className="text-2xl font-light text-primary animate-pulse">=</div>
 
-                {/* Braço (Direita) */}
-                <div className="flex flex-col items-center gap-1 sm:gap-2">
-                  <div className="bg-white/50 p-1.5 sm:p-2 rounded-xl">
-                    {compatibilidade.imagem_braco ? (
-                      <img
-                        src={compatibilidade.imagem_braco}
-                        alt="Braço do Limpador"
-                        className="h-16 sm:h-28 w-auto object-contain transition-transform hover:scale-110 duration-300"
-                      />
+                <div className="flex flex-col items-center gap-2">
+                  <div className="bg-white p-2 rounded-xl border">
+                    {compatibilidade.conectores?.imagem_braco ? (
+                      <img src={compatibilidade.conectores.imagem_braco} alt="Braço" className="h-20 w-auto" />
                     ) : (
-                      <div className="h-16 w-16 sm:h-28 sm:w-28 flex items-center justify-center bg-muted/10 rounded-lg border border-dashed text-[10px] text-muted-foreground font-bold">
-                        Braço
-                      </div>
+                      <img src="/placeholder.svg" alt="Braço" className="h-20 w-auto opacity-20" />
                     )}
                   </div>
-                  <span className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Braço/Palheta</span>
+                  <span className="text-[10px] font-bold uppercase tracking-tighter">Braço/Palheta</span>
                 </div>
               </div>
 

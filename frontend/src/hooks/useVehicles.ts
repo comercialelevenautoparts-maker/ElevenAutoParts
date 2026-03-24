@@ -12,21 +12,48 @@ export interface VeiculoCompativel {
   tamanho_passageiro: string | null;
   imagem_conector?: string;
   imagem_braco?: string;
+  conectores?: {
+    imagem_url: string;
+    imagem_braco: string | null;
+  };
 }
 
 export const useMarcas = () => {
   return useQuery({
     queryKey: ['veiculos-marcas'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('veiculos_compativeis')
-        .select('marca')
-        .order('marca');
+      let allData: { marca: string }[] = [];
+      let from = 0;
+      const step = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
+      // Loop de paginação para contornar o hard-limit de 1000 do Supabase
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('veiculos_compativeis')
+          .select('marca')
+          .order('marca')
+          .range(from, from + step - 1);
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          if (data.length < step) {
+            hasMore = false;
+          } else {
+            from += step;
+          }
+        } else {
+          hasMore = false;
+        }
+        
+        // Safety break per evitar loops infinitos
+        if (from > 10000) break; 
+      }
 
       // Get unique marcas
-      const uniqueMarcas = [...new Set(data.map(v => v.marca))];
+      const uniqueMarcas = [...new Set(allData.map(v => v.marca))];
+      
       return uniqueMarcas;
     },
   });
@@ -40,20 +67,14 @@ export const useModelos = (marca: string) => {
         .from('veiculos_compativeis')
         .select('*')
         .eq('marca', marca)
-        .order('modelo');
+        .order('modelo')
+        .limit(2000);
 
       if (error) throw error;
+      if (!data) return [];
 
-      // Get unique modelos by name, keeping the first occurrence (usually the one with lowest id or alphabetical order of other fields)
-      const uniqueModelos: VeiculoCompativel[] = [];
-      const seenModelos = new Set<string>();
-
-      data.forEach(item => {
-        if (!seenModelos.has(item.modelo)) {
-          uniqueModelos.push(item as VeiculoCompativel);
-          seenModelos.add(item.modelo);
-        }
-      });
+      // Get unique modelos names as strings to prevent React 'Objects are not valid as a React child' crash
+      const uniqueModelos: string[] = [...new Set(data.map(item => item.modelo))];
 
       return uniqueModelos;
     },
@@ -74,37 +95,28 @@ export const useAnos = (marca: string, modelo: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('veiculos_compativeis')
-        .select('ano_inicio, ano_fim, conector, tamanho_motorista, tamanho_passageiro')
+        .select('ano_inicio, ano_fim')
         .eq('marca', marca)
-        .eq('modelo', modelo);
+        .eq('modelo', modelo)
+        .limit(500);
 
       if (error) throw error;
+      if (!data) return [];
 
-      // Generar lista de anos com metadados, removendo duplicatas de anos
+      // Generar lista única de anos decubrindo o intervalo (ano_inicio até ano_fim)
       const currentYear = new Date().getFullYear();
-      const yearsData: YearMetadata[] = [];
       const seenYears = new Set<number>();
-
-      // Ordenar por data de início descendente para pegar os registros mais novos primeiro se houver sobreposição
-      data.sort((a, b) => b.ano_inicio - a.ano_inicio);
 
       data.forEach(item => {
         const startYear = item.ano_inicio;
         const endYear = item.ano_fim || currentYear;
         for (let year = startYear; year <= endYear; year++) {
-          if (!seenYears.has(year)) {
-            yearsData.push({
-              ano: year,
-              conector: item.conector,
-              tamanho_motorista: item.tamanho_motorista,
-              tamanho_passageiro: item.tamanho_passageiro
-            });
-            seenYears.add(year);
-          }
+          seenYears.add(year);
         }
       });
 
-      return yearsData.sort((a, b) => b.ano - a.ano);
+      // Retornar apenas a lista de números (anos) ordenada do mais novo para o mais antigo
+      return Array.from(seenYears).sort((a, b) => b - a);
     },
     enabled: !!marca && !!modelo,
   });
@@ -142,7 +154,12 @@ export const useCompatibilidade = (marca: string, modelo: string, ano: number) =
           return {
             ...veiculoData,
             imagem_conector: conectorData.imagem_url,
-            imagem_braco: conectorData.imagem_braco
+            imagem_braco: conectorData.imagem_braco,
+            // Adicionado o objeto agrupado que o frontend espera:
+            conectores: {
+              imagem_url: conectorData.imagem_url,
+              imagem_braco: conectorData.imagem_braco
+            }
           } as VeiculoCompativel;
         }
       }
