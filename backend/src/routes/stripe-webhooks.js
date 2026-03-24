@@ -28,12 +28,11 @@ router.post('/', async (req, res) => {
     try {
         // Se o segredo estiver definido, valida a assinatura
         if (endpointSecret && req.headers['x-test-bypass'] !== 'true') {
+            console.log('🔐 Validando assinatura do Webhook Stripe...');
             event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+            console.log('✅ Assinatura validada com sucesso.');
         } else {
-            // Fallback para dev local sem validação (CUIDADO: INSEGURO PARA PROD)
-            // Se não houver segredo, assume-se que req.body já é o objeto JSON parsed
-            // Isso requer que o express.json() tenha rodado antes APENAS se não estivermos validando
-            // Se estivermos validando, req.body TEM QUE SER BUFFER/STRING
+            console.log('⚠️ Ignorando validação de assinatura (CUIDADO: Ambiente de teste ou Secret ausente).');
             event = req.body;
 
             // Se req.body for Buffer, tentamos parsear
@@ -42,7 +41,9 @@ router.post('/', async (req, res) => {
             }
         }
     } catch (err) {
-        console.error(`❌ Webhook Error: ${err.message}`);
+        console.error(`❌ Webhook Error (Signature/Parsing): ${err.message}`);
+        console.error(`   - Sig: ${sig ? sig.substring(0, 10) + '...' : 'null'}`);
+        console.error(`   - Secret: ${endpointSecret ? endpointSecret.substring(0, 10) + '...' : 'null'}`);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -175,18 +176,25 @@ router.post('/', async (req, res) => {
             case 'product.created':
             case 'product.updated':
                 const product = event.data.object;
+                console.log(`📦 Processando Sincronização de Produto: ${product.id} (${product.name})`);
                 await syncProduct(product.id);
                 break;
 
             case 'price.created':
             case 'price.updated':
                 const price = event.data.object;
+                console.log(`💰 Processando Sincronização de Preço: ${price.id}`);
                 await syncPrice(price.id);
                 break;
 
             case 'product.deleted':
-                // Opcional: lidar com deleção
-                console.log('🗑️ Produto deletado na Stripe:', event.data.object.id);
+                const deletedProduct = event.data.object;
+                console.log(`🗑️ Desativando produto deletado na Stripe: ${deletedProduct.id}`);
+                // Em vez de deletar fisicamente, apenas desativamos no banco para manter histórico de pedidos
+                await supabase
+                    .from('produtos')
+                    .update({ ativo: false, updated_at: new Date().toISOString() })
+                    .eq('stripe_product_id', deletedProduct.id);
                 break;
 
             default:
