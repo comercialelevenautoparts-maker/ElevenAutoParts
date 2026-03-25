@@ -531,14 +531,14 @@ const ProductDetail = () => {
                     </button>
                     {isAnoOpen && (
                       <div className="absolute top-full left-0 mt-1 w-full max-h-48 overflow-y-auto bg-card border border-border rounded-lg shadow-elevated z-50 py-1">
-                        {anos.map((anoString) => (
+                        {anos.map((ano) => (
                           <button
-                            key={anoString}
-                            onClick={() => handleAnoSelect(parseInt(anoString))}
-                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${parseInt(anoString) === selectedAno ? 'text-primary bg-primary/5' : ''}`}
+                            key={ano}
+                            onClick={() => handleAnoSelect(ano)}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${ano === selectedAno ? 'text-primary bg-primary/5' : ''}`}
                           >
-                            {anoString}
-                            {parseInt(anoString) === selectedAno && <Check className="w-3 h-3 text-primary" />}
+                            {ano}
+                            {ano === selectedAno && <Check className="w-3 h-3 text-primary" />}
                           </button>
                         ))}
                       </div>
