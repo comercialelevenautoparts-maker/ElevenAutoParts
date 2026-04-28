@@ -1,9 +1,9 @@
 const axios = require("axios");
 const supabase = require("../config/supabase");
 
-const BLING_API_URL = "https://www.bling.com.br/Api/v3";
-const BLING_AUTH_URL = "https://www.bling.com.br/Api/v3/oauth/authorize";
-const BLING_TOKEN_URL = "https://www.bling.com.br/Api/v3/oauth/token";
+const BLING_API_URL = "https://api.bling.com.br/v3";
+const BLING_AUTH_URL = "https://api.bling.com.br/v3/oauth/authorize";
+const BLING_TOKEN_URL = "https://api.bling.com.br/v3/oauth/token";
 
 class BlingService {
   constructor() {
@@ -312,26 +312,45 @@ class BlingService {
           numeroDocumento: cpfLimpo,
           tipoPessoa: cpfLimpo.length > 11 ? "J" : "F",
         },
-        itens: order.items.map((item) => {
-          const veiculo = item.metadata?.veiculo;
-          let descricao = item.product?.nome || "Produto Sem Nome";
-
-          if (veiculo) {
-            const infoVeiculo = `${veiculo.marca} ${veiculo.modelo} (${veiculo.ano})`;
-            descricao = `${descricao} - ${infoVeiculo}`;
+        itens: order.items.map((item, index) => {
+          let codigoBruto = item.product?.sku || item.product?.nome || item.produto_id;
+          
+          // Se não tem SKU, tornamos o código único para este pedido e para esta linha (evita erro de duplicidade no Bling)
+          if (!item.product?.sku) {
+            codigoBruto = `${codigoBruto}-${order.numero_pedido}-${index + 1}`;
           }
 
-          return {
-            codigo: item.product?.sku || `PROD-${item.produto_id}`,
-            descricao: descricao,
+          const codigoSanitizado = String(codigoBruto).substring(0, 50).toUpperCase().replace(/[^A-Z0-9-]/g, '');
+
+          const itemPayload = {
+            codigo: codigoSanitizado,
             quantidade: item.quantidade,
             valor: Number(item.preco_unitario),
-            unidade: "un",
+            unidade: "un"
           };
+          
+          if (!item.product?.sku) {
+            itemPayload.descricao = (item.product?.nome || "Produto") + " (Ref: " + order.numero_pedido + ")";
+          } else {
+            itemPayload.descricao = item.product?.nome;
+          }
+          
+          return itemPayload;
         }),
         transporte: {
           frete: Number(order.valor_frete || 0),
         },
+        observacoes: [
+          order.tipo_frete === 'Retirada no Posto' ? '*** RETIRADA NO LOCAL ***' : null,
+          ...order.items.map(item => {
+            const veiculo = item.metadata?.veiculo;
+            const nomeProd = item.product?.nome || "Produto";
+            if (veiculo) {
+              return `${nomeProd}: ${veiculo.marca} ${veiculo.modelo} (${veiculo.ano})`;
+            }
+            return nomeProd;
+          })
+        ].filter(Boolean).join(' | '),
         finalizacao: {
           valorDesconto: Number(order.valor_desconto || 0),
         },
@@ -380,9 +399,10 @@ class BlingService {
         message: "Pedido de venda criado com sucesso no Bling.",
       };
     } catch (error) {
+      const errorDetail = error.response?.data;
       console.error(
         "❌ Erro ao criar pedido de venda no Bling:",
-        error.response?.data || error.message,
+        errorDetail ? JSON.stringify(errorDetail, null, 2) : error.message,
       );
 
       await supabase

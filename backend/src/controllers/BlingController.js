@@ -21,10 +21,10 @@ class BlingController {
             // Redirect back to frontend admin page
             // Assuming frontend is running on localhost:5173 or similar. 
             // Ideally should be an env var FRONTEND_URL
-            res.redirect('http://localhost:5173/admin/bling?status=success');
+            res.redirect('http://localhost:8080/admin/bling?status=success');
         } catch (error) {
             console.error(error);
-            res.redirect('http://localhost:5173/admin/bling?status=error');
+            res.redirect('http://localhost:8080/admin/bling?status=error');
         }
     }
 

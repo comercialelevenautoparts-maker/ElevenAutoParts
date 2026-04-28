@@ -11,7 +11,8 @@ const supabase = createClient(
 );
 
 router.post('/confirm-payment', async (req, res) => {
-    const { paymentIntentId, paymentMethodId } = req.body;
+    console.log('📥 Corpo recebido em /confirm-payment:', JSON.stringify(req.body));
+    const { paymentIntentId, paymentMethodId, orderId } = req.body;
 
     try {
         // Primeiro recuperamos o estado atual do intent
@@ -19,18 +20,27 @@ router.post('/confirm-payment', async (req, res) => {
         console.log(`[Stripe] PI ${paymentIntentId} status: ${paymentIntent.status}`);
 
         // Se já estiver em um estado avançado (especialmente para boleto que fica em 'requires_action')
-        // a gente não tenta confirmar de novo para evitar erro da Stripe
+
         const statusesToSkipConfirm = ['requires_action', 'succeeded', 'processing', 'requires_capture'];
 
         if (!statusesToSkipConfirm.includes(paymentIntent.status)) {
+            if (orderId) {
+                await stripe.paymentIntents.update(paymentIntentId, {
+                    metadata: { orderId }
+                });
+            }
+
             paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId, {
                 payment_method: paymentMethodId,
+            });
+        } else if (orderId) {
+            paymentIntent = await stripe.paymentIntents.update(paymentIntentId, {
+                metadata: { orderId }
             });
         }
 
         res.json({ paymentIntent });
     } catch (error) {
-        console.error('❌ Erro ao confirmar pagamento:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -45,7 +55,6 @@ router.post('/create-payment-intent', async (req, res) => {
     try {
         const cleanAmount = Math.round(Number(amount).toFixed(2) * 100);
 
-        // Criamos o intent com suporte a parcelamento (installments) para cartões brasileiros
         const paymentIntent = await stripe.paymentIntents.create({
             amount: cleanAmount,
             currency,
@@ -55,7 +64,7 @@ router.post('/create-payment-intent', async (req, res) => {
             payment_method_options: {
                 card: {
                     installments: {
-                        enabled: true, // Habilita o suporte a parcelas no motor da Stripe
+                        enabled: true,
                     },
                 },
                 boleto: { expires_after_days: 3 },
@@ -64,7 +73,6 @@ router.post('/create-payment-intent', async (req, res) => {
 
         res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {
-        console.error('❌ Erro Stripe:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -88,22 +96,44 @@ router.post('/create-checkout-session', async (req, res) => {
     }
 });
 
-// Atualiza metadados do PaymentIntent para vincular ao Pedido
+// Atualiza metadados ou valor do PaymentIntent
 router.post('/update-payment-intent', async (req, res) => {
-    const { paymentIntentId, orderId } = req.body;
+    const { paymentIntentId, orderId, amount, currency = 'brl' } = req.body;
 
-    if (!paymentIntentId || !orderId) {
-        return res.status(400).json({ error: 'paymentIntentId e orderId são obrigatórios' });
+    if (!paymentIntentId) {
+        return res.status(400).json({ error: 'paymentIntentId é obrigatório' });
     }
 
     try {
-        await stripe.paymentIntents.update(paymentIntentId, {
-            metadata: { orderId }
-        });
-        console.log(`✅ PaymentIntent ${paymentIntentId} vinculado ao pedido ${orderId}`);
-        res.json({ success: true });
+        // 1. Verificar o status atual do PaymentIntent
+        const currentPI = await stripe.paymentIntents.retrieve(paymentIntentId);
+        
+        // Se já foi pago, não podemos atualizar o valor
+        if (currentPI.status === 'succeeded') {
+            return res.json({ 
+                success: true, 
+                message: 'Pagamento já concluído, atualização ignorada.',
+                paymentIntent: currentPI 
+            });
+        }
+
+        const updateData = {};
+        if (orderId) updateData.metadata = { orderId };
+        if (amount) {
+            updateData.amount = Math.round(Number(amount).toFixed(2) * 100);
+            updateData.currency = currency;
+        }
+
+        const paymentIntent = await stripe.paymentIntents.update(paymentIntentId, updateData);
+        
+        console.log(`✅ PaymentIntent ${paymentIntentId} atualizado. Novo valor: ${paymentIntent.amount / 100}`);
+        res.json({ success: true, paymentIntent });
     } catch (error) {
-        console.error('❌ Erro ao atualizar metadata:', error.message);
+        // Silenciar erro se o PI já estiver concluído (corrida de processos)
+        if (error.message.includes('status of succeeded')) {
+            return res.json({ success: true, message: 'Já processado.' });
+        }
+        console.error('❌ Erro ao atualizar PaymentIntent:', error.message);
         res.status(500).json({ error: error.message });
     }
 });
