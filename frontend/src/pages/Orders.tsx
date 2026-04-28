@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, Search, ChevronRight, MapPin, CreditCard, Calendar, Hash, ReceiptText, Truck, Tag, User, Mail, Phone, Fingerprint, Copy, Check, FileText, ExternalLink } from 'lucide-react';
+import { Package, Search, ChevronRight, MapPin, CreditCard, Calendar, Hash, ReceiptText, Truck, Tag, User, Mail, Phone, Fingerprint, Copy, Check, FileText, ExternalLink, Ticket, QrCode } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+
+const PICKUP_POINT = {
+  name: "Posto Eleven - Matriz",
+  street: "Rua das Peças",
+  number: "123",
+  bairro: "Centro",
+  city: "São Paulo",
+  state: "SP",
+  cep: "01001-000",
+  hours: "Seg. a Sex. das 09h às 18h"
+};
 
 const Orders = () => {
   const location = useLocation();
@@ -367,9 +378,20 @@ const Orders = () => {
                 {/* Address Section */}
                 <div>
                   <h4 className="text-[9px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 md:mb-3 flex items-center gap-2">
-                    <MapPin className="w-2.5 h-2.5 md:w-3 md:h-3" /> Endereço de Entrega
+                    <MapPin className="w-2.5 h-2.5 md:w-3 md:h-3" /> {selectedOrder.tipo_frete === 'Retirada no Posto' ? 'Local de Retirada' : 'Endereço de Entrega'}
                   </h4>
-                  {selectedOrder.endereco ? (
+                  {selectedOrder.tipo_frete === 'Retirada no Posto' ? (
+                    <div className="p-3 md:p-4 bg-primary/5 rounded-xl border border-primary/20">
+                      <p className="text-xs md:text-sm font-bold text-primary mb-0.5 md:mb-1">{PICKUP_POINT.name}</p>
+                      <p className="text-[10px] md:text-xs text-foreground font-medium mb-0.5 md:mb-1">{PICKUP_POINT.street}, {PICKUP_POINT.number}</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground font-medium uppercase tracking-tighter">
+                        {PICKUP_POINT.bairro} • {PICKUP_POINT.city}/{PICKUP_POINT.state}
+                      </p>
+                      <p className="text-[9px] md:text-[10px] font-bold text-primary mt-2 flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3" /> {PICKUP_POINT.hours}
+                      </p>
+                    </div>
+                  ) : selectedOrder.endereco ? (
                     <div className="p-3 md:p-4 bg-muted/30 rounded-xl border border-border/100">
                       <p className="text-xs md:text-sm font-bold text-foreground mb-0.5 md:mb-1">{selectedOrder.endereco.logradouro}, {selectedOrder.endereco.numero}</p>
                       {selectedOrder.endereco.complemento && (
@@ -384,6 +406,39 @@ const Orders = () => {
                     <p className="text-[10px] md:text-xs text-muted-foreground italic">Endereço não disponível</p>
                   )}
                 </div>
+
+                {/* Pickup Voucher Section */}
+                {selectedOrder.tipo_frete === 'Retirada no Posto' && selectedOrder.status === 'pago' && (
+                  <div className="animate-in fade-in zoom-in-95 duration-500">
+                    <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-2xl p-5 md:p-6 text-white shadow-lg border border-primary/20">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full -ml-12 -mb-12 blur-xl" />
+                      
+                      <div className="relative flex justify-between items-start mb-6">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Ticket className="w-4 h-4 text-white/80" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">Voucher de Retirada</span>
+                          </div>
+                          <h3 className="text-xl md:text-2xl font-black tracking-tight">CÓDIGO: {selectedOrder.numero_pedido.slice(-6).toUpperCase()}</h3>
+                        </div>
+                        <div className="bg-white p-1.5 rounded-lg shadow-inner">
+                          <QrCode className="w-8 h-8 md:w-10 md:h-10 text-primary" />
+                        </div>
+                      </div>
+
+                      <div className="relative bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
+                        <p className="text-[10px] md:text-xs font-bold leading-relaxed text-center">
+                          Apresente este código no balcão do posto para liberar a entrega do seu produto.
+                        </p>
+                      </div>
+                      
+                      {/* Ticket notches */}
+                      <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-background rounded-full" />
+                      <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-background rounded-full" />
+                    </div>
+                  </div>
+                )}
 
                 {/* Shipping Details Section */}
                 <div>

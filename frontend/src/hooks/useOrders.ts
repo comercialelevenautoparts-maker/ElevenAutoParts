@@ -70,6 +70,7 @@ export const useCreateOrder = () => {
       valor_total: number;
       forma_pagamento: string;
       tipo_frete?: string;
+      frete_service_id?: number;
       status?: StatusPedido;
       itens: {
         produto_id: string;
@@ -94,6 +95,7 @@ export const useCreateOrder = () => {
         valor_total: orderData.valor_total,
         forma_pagamento: orderData.forma_pagamento,
         tipo_frete: orderData.tipo_frete,
+        frete_service_id: orderData.frete_service_id,
         status: orderData.status || 'pendente',
       };
 

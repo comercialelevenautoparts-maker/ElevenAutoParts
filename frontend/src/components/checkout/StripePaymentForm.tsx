@@ -104,7 +104,10 @@ export const StripePaymentForm = ({
                 return;
             }
 
-            // 3. Confirm payment on the BACKEND to avoid Stripe.js automatic modal
+            const order = await onCreateOrder('pendente', pm.type);
+            const orderId = order?.id;
+
+            // 4. Confirm payment on the BACKEND
             const apiUrl = import.meta.env.VITE_API_URL || '';
             const paymentIntentId = clientSecret.split('_secret_')[0];
 
@@ -113,7 +116,8 @@ export const StripePaymentForm = ({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     paymentIntentId,
-                    paymentMethodId: pm.id
+                    paymentMethodId: pm.id,
+                    orderId: orderId // Enviamos o orderId agora!
                 }),
             });
 
@@ -124,9 +128,9 @@ export const StripePaymentForm = ({
 
             const { paymentIntent } = await response.json();
 
-            // 4. Handle based on status and identify correct method
+            // 5. Handle based on status and identify correct method
             let orderStatus = 'pendente';
-            let finalPaymentMethod = pm.type; // Default to what Stripe identified
+            let finalPaymentMethod = pm.type; 
 
             if (paymentIntent.status === 'succeeded') {
                 orderStatus = 'pago';
@@ -139,23 +143,19 @@ export const StripePaymentForm = ({
                 finalPaymentMethod = 'pix';
             }
 
-            const order = await onCreateOrder(orderStatus, finalPaymentMethod);
-
-            // Vincula o PaymentIntent ao Order ID para permitir webhooks futuros (ex: boleto pago)
-            if (paymentIntentId && order.id) {
+            // Se o status mudou (ex: foi pago na hora), atualizamos o pedido localmente ou via API
+            if (orderStatus === 'pago') {
+                console.log('✅ Pagamento aprovado na hora, atualizando status do pedido...');
+                // O Webhook também fará isso, mas fazemos aqui para feedback imediato na UI
                 try {
-                    console.log('🔗 Vinculando pedido ao pagamento...');
-                    await fetch(`${apiUrl}/api/update-payment-intent`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            paymentIntentId,
-                            orderId: order.id
-                        }),
-                    });
-                } catch (linkError) {
-                    console.error('⚠️ Falha ao vincular metadata, mas pedido criado:', linkError);
-                    // Não bloqueia o fluxo, pois o pedido já foi criado
+                    const { createClient } = await import('@supabase/supabase-js');
+                    const supabase = createClient(
+                        import.meta.env.VITE_SUPABASE_URL,
+                        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+                    );
+                    await supabase.from('pedidos').update({ status: 'pago' }).eq('id', orderId);
+                } catch (e) {
+                    console.warn('Erro ao atualizar status imediato:', e);
                 }
             }
 

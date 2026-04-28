@@ -3,7 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Check, MapPin, CreditCard, Package, QrCode, Barcode, FileText, Loader2, ShieldCheck, Truck, Wallet, Trash2, Plus, ChevronLeft, CheckCircle2, User, LogIn, Lock, Mail, Eye, EyeOff, User as UserIcon, CreditCard as CardIcon } from 'lucide-react';
+import { Check, MapPin, CreditCard, Package, QrCode, Barcode, FileText, Loader2, ShieldCheck, Truck, Wallet, Trash2, Plus, ChevronLeft, CheckCircle2, User, LogIn, Lock, Mail, Eye, EyeOff, User as UserIcon, CreditCard as CardIcon, Store } from 'lucide-react';
+
+const PICKUP_POINT = {
+  name: "Posto Eleven Auto Parts",
+  address: "Rua das Peças, 123",
+  bairro: "Centro",
+  city: "São Paulo",
+  state: "SP",
+  cep: "01001-000",
+  instructions: "Retirada disponível de Segunda a Sexta, das 09h às 18h."
+};
 import { toast } from 'sonner';
 
 // Stripe Imports
@@ -61,16 +71,13 @@ const checkoutSchema = z.object({
     const digits = val.replace(/\D/g, '');
     return digits.length >= 10 && digits.length <= 11;
   }, 'Telefone inválido'),
-  cep: z.string().refine((val) => {
-    const digits = val.replace(/\D/g, '');
-    return digits.length === 8;
-  }, 'CEP incompleto'),
-  street: z.string().min(1, 'Rua é obrigatória'),
-  number: z.string().min(1, 'Número é obrigatório'),
+  cep: z.string().optional(),
+  street: z.string().optional(),
+  number: z.string().optional(),
   complement: z.string().optional(),
-  bairro: z.string().min(1, 'Bairro é obrigatório'),
-  city: z.string().min(1, 'Cidade é obrigatória'),
-  state: z.string().min(2, 'Estado inválido').max(2, 'Use a sigla (ex: SP)'),
+  bairro: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
 
   // Step 2: Payment Method Selection
   paymentMethod: z.enum(['credit', 'debit', 'pix', 'boleto', 'card']),
@@ -89,6 +96,7 @@ const Checkout = () => {
     type: 'card' | 'boleto' | 'pix';
     boletoUrl?: string;
   } | null>(null);
+  const [deliveryType, setDeliveryType] = useState<'shipping' | 'pickup'>('shipping');
   const { items, getTotalPrice, clearCart } = useCart();
   const { user, profile, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
@@ -144,7 +152,17 @@ const Checkout = () => {
   })), [shippingOptions]);
 
   const selectedShippingOption = allShippingOptions.find((s) => s.id === selectedShippingId);
-  const shipping = selectedShippingOption ? selectedShippingOption.price : 0;
+  const shipping = deliveryType === 'pickup' ? 0 : (selectedShippingOption ? selectedShippingOption.price : 0);
+
+  useEffect(() => {
+    if (deliveryType === 'pickup') {
+      setSelectedShippingId('retirada');
+    } else {
+      if (selectedShippingId === 'retirada') {
+        setSelectedShippingId(null);
+      }
+    }
+  }, [deliveryType]);
 
   let couponDiscount = 0;
   if (appliedCoupon) {
@@ -253,9 +271,32 @@ const Checkout = () => {
   }, [user, profile, setValue, step]);
 
   useEffect(() => {
+    const syncPaymentIntent = async () => {
+      // Só sincroniza se já temos um clientSecret e o valor mudou
+      if (!clientSecret || !clientSecret.includes('_secret_') || finalTotal <= 0) return;
+
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const paymentIntentId = clientSecret.split('_secret_')[0];
+        
+        console.log('🔄 Sincronizando valor com Stripe:', finalTotal);
+        await fetch(`${apiUrl}/api/update-payment-intent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentIntentId,
+            amount: finalTotal,
+          }),
+        });
+      } catch (error) {
+        console.error("Erro ao sincronizar valor com Stripe:", error);
+      }
+    };
+
     const fetchPaymentIntent = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
+        console.log('💳 Criando Payment Intent inicial com valor:', finalTotal);
         const response = await fetch(`${apiUrl}/api/create-payment-intent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -283,8 +324,17 @@ const Checkout = () => {
       }
     };
 
-    if (step === 2 && finalTotal > 0 && !clientSecret && (user || watch('email'))) {
-      fetchPaymentIntent();
+    // Lógica de disparo
+    if (step >= 2 && finalTotal > 0) {
+      if (!clientSecret && (user || watch('email'))) {
+        fetchPaymentIntent();
+      } else if (clientSecret) {
+        // Debounce simples para evitar múltiplas chamadas rápidas ao atualizar frete/cupom
+        const timer = setTimeout(() => {
+          syncPaymentIntent();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
     }
   }, [step, finalTotal, user, items.length, clientSecret, watch]);
 
@@ -297,13 +347,26 @@ const Checkout = () => {
       }
       fieldsToValidate = ['fullName', 'email', 'cpf', 'password'];
     } else if (step === 2) {
-      if (selectedAddressId) {
+      if (deliveryType === 'pickup') {
+        fieldsToValidate = ['phone'];
+      } else if (selectedAddressId) {
         fieldsToValidate = ['phone'];
       } else {
-        fieldsToValidate = ['phone', 'cep', 'street', 'number', 'complement', 'bairro', 'city', 'state'];
+        fieldsToValidate = ['phone', 'cep', 'street', 'number', 'bairro', 'city', 'state'];
+        
+        // Validação manual extra para campos obrigatórios de entrega
+        const vals = form.getValues();
+        if (!vals.cep || vals.cep.replace(/\D/g, '').length !== 8) {
+          toast.error("CEP inválido.");
+          return;
+        }
+        if (!vals.street || !vals.number || !vals.bairro || !vals.city || !vals.state) {
+          toast.error("Preencha todos os campos do endereço.");
+          return;
+        }
       }
 
-      if (allShippingOptions.length > 0 && !selectedShippingId) {
+      if (deliveryType === 'shipping' && allShippingOptions.length > 0 && !selectedShippingId) {
         toast.error("Selecione uma opção de frete.");
         return;
       }
@@ -352,9 +415,9 @@ const Checkout = () => {
       }
     }
 
-    let addressId = selectedAddressId;
-
-    if (!addressId) {
+    let addressId = deliveryType === 'pickup' ? null : selectedAddressId;
+    
+    if (deliveryType !== 'pickup' && !addressId) {
       const newAddr = await createAddress({
         cep: watch('cep').replace(/\D/g, ''),
         logradouro: watch('street'),
@@ -377,7 +440,8 @@ const Checkout = () => {
       valor_total: finalTotal,
       forma_pagamento: formaPagamento || paymentMethod,
       status: status as StatusPedido,
-      tipo_frete: selectedShippingOption?.name || 'Transportadora',
+      tipo_frete: deliveryType === 'pickup' ? 'Retirada no Posto' : (selectedShippingOption?.name || 'Transportadora'),
+      frete_service_id: (deliveryType === 'pickup' || !selectedShippingId) ? undefined : Number(selectedShippingId),
       itens: items.map(item => ({
         produto_id: item.id,
         nome_produto: item.name,
@@ -674,11 +738,79 @@ const Checkout = () => {
                         <MapPin className="text-primary w-4 h-4 md:w-6 md:h-6" />
                         <div>
                           <h2 className="text-base md:text-xl font-bold uppercase tracking-widest text-foreground/80">Entrega</h2>
-                          <p className="text-muted-foreground text-[10px] md:text-sm font-medium uppercase tracking-tighter opacity-70">Onde devemos entregar seu pedido?</p>
+                          <p className="text-muted-foreground text-[10px] md:text-sm font-medium uppercase tracking-tighter opacity-70">Como deseja receber seu pedido?</p>
                         </div>
                       </div>
 
-                      {/* Saved Addresses List */}
+                      {/* Delivery Mode Toggle */}
+                      <div className="grid grid-cols-2 gap-3 mb-8">
+                        <div
+                          onClick={() => setDeliveryType('shipping')}
+                          className={`p-4 border rounded-xl cursor-pointer transition-all flex flex-col items-center gap-2 ${deliveryType === 'shipping'
+                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm'
+                            : 'border-border/60 hover:bg-muted/5'
+                            }`}
+                        >
+                          <Truck className={`w-6 h-6 ${deliveryType === 'shipping' ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div className="text-center">
+                            <p className="text-xs font-bold uppercase tracking-widest">Receber em casa</p>
+                            <p className="text-[9px] text-muted-foreground uppercase font-medium">Via transportadora</p>
+                          </div>
+                        </div>
+
+                        <div
+                          onClick={() => setDeliveryType('pickup')}
+                          className={`p-4 border rounded-xl cursor-pointer transition-all flex flex-col items-center gap-2 ${deliveryType === 'pickup'
+                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm'
+                            : 'border-border/60 hover:bg-muted/5'
+                            }`}
+                        >
+                          <Store className={`w-6 h-6 ${deliveryType === 'pickup' ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div className="text-center">
+                            <p className="text-xs font-bold uppercase tracking-widest">Retirar no posto</p>
+                            <p className="text-[9px] text-muted-foreground uppercase font-medium">Frete Grátis</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {deliveryType === 'pickup' ? (
+                        <div className="animate-in zoom-in-95 duration-300">
+                          <div className="bg-muted/30 border border-dashed border-primary/30 rounded-xl p-5 text-center">
+                            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <MapPin className="text-primary w-6 h-6" />
+                            </div>
+                            <h3 className="font-bold text-sm uppercase tracking-widest mb-1">{PICKUP_POINT.name}</h3>
+                            <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                              {PICKUP_POINT.address}, {PICKUP_POINT.bairro}<br />
+                              {PICKUP_POINT.city} - {PICKUP_POINT.state}, {PICKUP_POINT.cep}
+                            </p>
+                            <div className="inline-block bg-green-500/10 text-green-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+                              Pronto para retirada em até 24h
+                            </div>
+                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter opacity-60">
+                              {PICKUP_POINT.instructions}
+                            </p>
+                          </div>
+                          
+                          <div className="mt-6">
+                            <FormField
+                              control={form.control}
+                              name="phone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Telefone / WhatsApp (para aviso de retirada)</FormLabel>
+                                  <FormControl>
+                                    <Input className="text-xs h-9" placeholder="(11) 99999-9999" {...field} onChange={(e) => field.onChange(formatPhone(e.target.value))} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Saved Addresses List */}
                       {savedAddresses.length > 0 && (
                         <div className="mb-6">
                           <h3 className="text-[10px] md:text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3 px-1">Seus endereços salvos:</h3>
@@ -945,6 +1077,8 @@ const Checkout = () => {
                           ))}
                         </div>
                       )}
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -1007,7 +1141,11 @@ const Checkout = () => {
                                 <div className="flex flex-col gap-1">
                                   <span className="text-muted-foreground font-bold uppercase tracking-tighter text-[9px] md:text-[10px]">Endereço de Entrega:</span>
                                   <span className="font-bold text-foreground text-[11px] md:text-sm leading-tight">
-                                    {watch('street')}, {watch('number')}{watch('complement') ? ` - ${watch('complement')}` : ''}, {watch('bairro')} - {watch('city')}/{watch('state')}
+                                    {deliveryType === 'pickup' ? (
+                                      <>RETIRADA: {PICKUP_POINT.name} - {PICKUP_POINT.city}/{PICKUP_POINT.state}</>
+                                    ) : (
+                                      <>{watch('street')}, {watch('number')}{watch('complement') ? ` - ${watch('complement')}` : ''}, {watch('bairro')} - {watch('city')}/{watch('state')}</>
+                                    )}
                                   </span>
                                 </div>
                                 <div className="flex justify-between items-center border-t border-border/50 pt-2">
@@ -1089,16 +1227,15 @@ const Checkout = () => {
                   <span className="font-bold tracking-tight">R$ {subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground font-bold uppercase text-[9px] tracking-widest">Entrega estimada</span>
-                  <span className="font-bold tracking-tight">{watch('cep').replace(/\D/g, '').length === 8 ? `R$ ${shipping.toFixed(2)}` : '--'}</span>
+                  <span className="text-muted-foreground font-bold uppercase text-[9px] tracking-widest">
+                    {deliveryType === 'pickup' ? 'Retirada no local' : 'Entrega estimada'}
+                  </span>
+                  <span className="font-bold tracking-tight">
+                    {deliveryType === 'pickup' ? 'GRÁTIS' : (watch('cep').replace(/\D/g, '').length === 8 ? `R$ ${shipping.toFixed(2)}` : '--')}
+                  </span>
                 </div>
 
-                {appliedCoupon && (
-                  <div className="flex justify-between items-center text-primary font-bold animate-in slide-in-from-top-1">
-                    <span className="uppercase text-[9px] tracking-widest">Cupom ({appliedCoupon.codigo})</span>
-                    <span className="tracking-tight">- R$ {couponDiscount.toFixed(2)}</span>
-                  </div>
-                )}
+
 
                 <div className="pt-4 mt-4 border-t border-border/40">
                   <div className="flex justify-between items-center mb-1">
@@ -1106,6 +1243,47 @@ const Checkout = () => {
                     <span className="font-bold text-xl md:text-2xl text-primary tracking-tighter leading-none">R$ {finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
+
+                {/* Coupon Input - Visible from Step 1 onwards */}
+                {step >= 1 && !appliedCoupon && (
+                  <div className="pt-4 mt-2 border-t border-border/40 animate-in fade-in slide-in-from-top-2">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Possui um cupom?</p>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Código do cupom"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        className="h-9 text-xs uppercase"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isValidatingCoupon || !couponCode}
+                        onClick={handleApplyCoupon}
+                        className="h-9 border-primary text-primary hover:bg-primary/5 text-[10px] font-bold uppercase tracking-widest"
+                      >
+                        {isValidatingCoupon ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Aplicar'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {appliedCoupon && (
+                  <div className="flex justify-between items-center mt-2 p-2 bg-primary/5 rounded-lg border border-primary/20 animate-in zoom-in-95">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-bold uppercase text-muted-foreground">Cupom aplicado:</span>
+                      <span className="text-[10px] font-black text-primary uppercase">{appliedCoupon.codigo}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAppliedCoupon(null)}
+                      className="text-muted-foreground hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex gap-2 text-xs text-muted-foreground">
