@@ -3,3 +3,9 @@ node_modules/
 .DS_Store
 npm-debug.log
 *.log
+
+simulate_webhook.js
+test_bling_meta.js
+test_bling.js
+test_stripe_webhook_sim.js
+test_supabase_sync.js
