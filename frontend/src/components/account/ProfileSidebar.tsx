@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { User, Package, Heart, Gift, Truck, LogOut, ChevronRight, Ticket } from 'lucide-react';
+import { User, Package, Heart, Gift, Truck, LogOut, ChevronRight, Ticket, Store } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const ProfileSidebar = () => {
-    const { signOut } = useAuth();
+    const { signOut, isAdmin } = useAuth();
     const location = useLocation();
 
     const menuItems = [
@@ -14,6 +14,10 @@ const ProfileSidebar = () => {
         { icon: Gift, label: 'Indique e ganhe', href: '/indique-e-ganhe' },
         { icon: Truck, label: 'Rastreamento', href: '/rastreio' },
     ];
+
+    if (isAdmin) {
+        menuItems.push({ icon: Store, label: 'Posto de Retirada', href: '/admin/posto-de-retirada' });
+    }
 
     const isActive = (path: string) => location.pathname === path;
 

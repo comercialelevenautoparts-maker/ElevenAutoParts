@@ -26,6 +26,7 @@ import ReturnPolicy from "./pages/ReturnPolicy";
 import { CartSyncManager } from "./components/CartSyncManager";
 import WhatsAppButton from "./components/common/WhatsAppButton";
 import BlingIntegration from "./pages/admin/BlingIntegration";
+import PickupPointManagement from "./pages/admin/PickupPointManagement";
 
 import ScrollToTop from "./components/common/ScrollToTop";
 
@@ -65,6 +66,7 @@ const App = () => (
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/admin/bling" element={<BlingIntegration />} />
+            <Route path="/admin/posto-de-retirada" element={<PickupPointManagement />} />
             <Route path="/terms$conditions" element={<TermsConditions />} />
             <Route path="/privacy$policy" element={<PrivacyPolicy />} />
             <Route path="/cancellation-policy" element={<CancellationPolicy />} />

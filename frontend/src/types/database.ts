@@ -204,3 +204,23 @@ export interface FAQ {
   ativo: boolean;
   created_at: string;
 }
+
+export interface PickupPoint {
+  id: string;
+  name: string;
+  address: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  cep: string;
+  instructions: string | null;
+  active: boolean;
+  updated_at: string;
+}
+
+export interface ReferralSettings {
+  id: string;
+  referrer_bonus_amount: number;
+  referred_discount_percent: number;
+  updated_at: string;
+}

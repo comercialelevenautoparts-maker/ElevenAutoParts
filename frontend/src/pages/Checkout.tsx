@@ -5,15 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Check, MapPin, CreditCard, Package, QrCode, Barcode, FileText, Loader2, ShieldCheck, Truck, Wallet, Trash2, Plus, ChevronLeft, CheckCircle2, User, LogIn, Lock, Mail, Eye, EyeOff, User as UserIcon, CreditCard as CardIcon, Store } from 'lucide-react';
 
-const PICKUP_POINT = {
-  name: "Posto Eleven Auto Parts",
-  address: "Rua das Peças, 123",
-  bairro: "Centro",
-  city: "São Paulo",
-  state: "SP",
-  cep: "01001-000",
-  instructions: "Retirada disponível de Segunda a Sexta, das 09h às 18h."
-};
 import { toast } from 'sonner';
 
 // Stripe Imports
@@ -29,6 +20,7 @@ import { useAddresses, useCreateAddress, useDeleteAddress } from '@/hooks/useAdd
 import { useCoupon } from '@/hooks/useCoupons';
 import { useCreateOrder } from '@/hooks/useOrders';
 import { useShipping } from '@/hooks/useShipping';
+import { usePickupPoint } from '@/hooks/usePickupPoints';
 import { Cupom, StatusPedido } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,7 +91,18 @@ const Checkout = () => {
   const [deliveryType, setDeliveryType] = useState<'shipping' | 'pickup'>('shipping');
   const { items, getTotalPrice, clearCart } = useCart();
   const { user, profile, signIn, signInWithGoogle } = useAuth();
+  const { data: dynamicPickupPoint } = usePickupPoint();
   const navigate = useNavigate();
+
+  const PICKUP_POINT = dynamicPickupPoint || {
+    name: "Posto Eleven Auto Parts",
+    address: "Rua das Peças, 123",
+    bairro: "Centro",
+    city: "São Paulo",
+    state: "SP",
+    cep: "01001-000",
+    instructions: "Retirada disponível de Segunda a Sexta, das 09h às 18h."
+  };
 
   const [authMode, setAuthMode] = useState<'register' | 'login'>('login');
   const [loginEmail, setLoginEmail] = useState('');

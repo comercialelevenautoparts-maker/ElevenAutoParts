@@ -8,6 +8,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { useCart } from '@/hooks/useCart';
 import { Input } from '@/components/ui/input';
 import ProfileSidebar from '@/components/account/ProfileSidebar';
+import { usePickupPoint } from '@/hooks/usePickupPoints';
 import {
   Sheet,
   SheetContent,
@@ -19,16 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 
-const PICKUP_POINT = {
-  name: "Posto Eleven - Matriz",
-  street: "Rua das Peças",
-  number: "123",
-  bairro: "Centro",
-  city: "São Paulo",
-  state: "SP",
-  cep: "01001-000",
-  hours: "Seg. a Sex. das 09h às 18h"
-};
 
 const Orders = () => {
   const location = useLocation();
@@ -37,8 +28,29 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const { user, profile, isAdmin } = useAuth();
   const { data: orders, isLoading } = useOrders();
+  const { data: dynamicPickupPoint } = usePickupPoint();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+
+  const PICKUP_POINT = dynamicPickupPoint ? {
+    name: dynamicPickupPoint.name,
+    street: dynamicPickupPoint.address,
+    number: "",
+    bairro: dynamicPickupPoint.neighborhood,
+    city: dynamicPickupPoint.city,
+    state: dynamicPickupPoint.state,
+    cep: dynamicPickupPoint.cep,
+    hours: dynamicPickupPoint.instructions || ""
+  } : {
+    name: "Posto Eleven - Matriz",
+    street: "Rua das Peças",
+    number: "123",
+    bairro: "Centro",
+    city: "São Paulo",
+    state: "SP",
+    cep: "01001-000",
+    hours: "Seg. a Sex. das 09h às 18h"
+  };
 
   const handleBuyAgain = (order: any) => {
     order.pedido_itens?.forEach((item: any) => {

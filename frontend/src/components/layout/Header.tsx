@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Package, User as UserIcon, Truck, Heart, Gift, Ticket } from 'lucide-react';
+import { LogOut, Package, User as UserIcon, Truck, Heart, Gift, Ticket, Store } from 'lucide-react';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -21,7 +21,7 @@ const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
   const { items, removeItem, getTotalPrice, getTotalItems } = useCart();
-  const { user, signOut, profile } = useAuth();
+  const { user, signOut, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -219,6 +219,19 @@ const Header = () => {
                             <Truck className="w-5 h-5" />
                             Rastreamento
                           </Button>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              className="justify-start gap-3 h-12 text-base font-normal"
+                              onClick={() => {
+                                setIsProfileOpen(false);
+                                navigate('/admin/posto-de-retirada');
+                              }}
+                            >
+                              <Store className="w-5 h-5" />
+                              Posto de Retirada
+                            </Button>
+                          )}
                         </div>
 
                         <div className="mt-auto border-t border-border pt-4">
